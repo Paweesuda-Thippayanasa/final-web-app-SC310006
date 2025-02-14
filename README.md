@@ -1,9 +1,75 @@
-# React + Vite
+# **โครงงาน: ระบบเช็คชื่อนักศึกษาและถาม-ตอบในห้องเรียน**  
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+## **สมาชิกกลุ่ม**  
+- ปวีณ์สุดา ทิพยนาสา  
+- วรรธนะ เสี้ยมแหลม  
 
-Currently, two official plugins are available:
+## **เทคโนโลยีที่ใช้**  
+- **Web Application (อาจารย์):** ReactJS + Tailwind CSS  
+- **Mobile Application (นักศึกษา):** React Native (Expo)  
+- **Backend:** Firebase (Cloud Firestore & Authentication)  
+- **Deployment:** GitHub Pages สำหรับ Web Application  
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react/README.md) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
-"# final-web-app-SC310006" 
+---
+
+## **ฟีเจอร์หลักของระบบ**  
+
+### **สำหรับอาจารย์ (Web Application - ReactJS)**  
+- ลงชื่อเข้าใช้งานผ่าน Google  
+- สร้างและจัดการวิชาเรียน  
+- เปิดและปิดระบบเช็คชื่อโดยใช้ QR Code หรือรหัส  
+- ตั้งคำถามให้นักศึกษาตอบ  
+- ดูรายงานการเช็คชื่อและคำตอบของนักศึกษา  
+
+---
+
+### **สำหรับนักศึกษา (Mobile Application - React Native Expo)**  
+
+#### **การพัฒนาแอปพลิเคชัน**  
+- ใช้ **Expo** ในการพัฒนา Mobile Application  
+- รองรับการรันผ่าน **Expo Go**  
+- ใช้ Firebase Authentication สำหรับการเข้าสู่ระบบด้วย **OTP หรือ Email/Password**  
+
+#### **ฟีเจอร์ในแอปพลิเคชันนักศึกษา**  
+
+**1. หน้าแรก**  
+- แสดง **ข้อมูลส่วนตัว** ของผู้ใช้  
+- ปุ่ม **เพิ่มวิชา** โดยการกรอกรหัสห้องเรียน  
+- ปุ่ม **สแกน QR Code** เพื่อเข้าร่วมวิชาเรียน  
+  - ใช้ Expo Camera สำหรับสแกน QR Code  
+- กรอกรหัสประจำตัว **ชื่อ-นามสกุล** และกดลงทะเบียน  
+
+**2. รายชื่อวิชาที่ลงทะเบียน**  
+- แสดง **รายชื่อวิชาที่เรียน**  
+- ปุ่ม **เช็คชื่อเข้าเรียน**  
+- กรอก **รหัสเช็คชื่อ** และกดยืนยัน  
+
+**3. หน้าจอเข้าเรียน**  
+- แสดง **ข้อมูลวิชา**  
+- มีช่องกรอก **หมายเหตุ** และปุ่ม **บันทึก**  
+
+**4. ตอบคำถามแบบเรียลไทม์**  
+- หากอาจารย์เปิดคำถาม ระบบจะแสดงช่องให้ตอบ  
+- กรอกคำตอบและกดส่ง  
+- เมื่อคำถามถูกปิด หน้าตอบคำถามจะหายไป  
+
+**5. การบันทึกข้อมูลในเครื่อง (LocalStorage)**  
+- เก็บรหัสวิชาและข้อมูลการเข้าเรียน  
+- สามารถกลับมาเข้าหน้าเข้าเรียนได้โดยตรง  
+
+---
+
+## **สรุปการพัฒนา**  
+
+- **Web Application (ReactJS + Tailwind CSS)**
+  - สำหรับอาจารย์ในการจัดการวิชาเรียนและเช็คชื่อ  
+- **Mobile Application (React Native Expo)**
+  - สำหรับนักศึกษาใช้ในการเช็คชื่อและตอบคำถาม  
+- **Firebase**
+  - ใช้ Authentication ในการล็อกอิน  
+  - ใช้ Firestore ในการจัดเก็บข้อมูล  
+- **GitHub Pages**
+  - ใช้สำหรับการ deploy Web Application  
+
+---
+
