@@ -1,13 +1,16 @@
 import { Routes, Route } from "react-router-dom";
 import "./App.css";
-import LoginComponent from "./components/LoginComponent";
+import { getFirestore } from "firebase/firestore";
+import LoginPage from "./components/LoginComponent";
+import HomePage from "./components/HomePage";
 
 function App() {
+
 	return (
-    // gvk
 		<div>
 			<Routes>
-				<Route path="/" element={<LoginComponent />} />
+				<Route path="/" element={<LoginPage />} />
+				<Route path="/home" element={<HomePage />} />
 			</Routes>
 		</div>
 	);
