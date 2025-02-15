@@ -110,32 +110,34 @@ async function addAnswerToCheckin(cid, cno, qno, stdid, text, time) {
 }
 
 // ฟังก์ชันสำหรับลงชื่อเข้าใช้ด้วย Google
-export const signInWithGoogle = async (navigate) => {
+export const signInWithGoogle = async () => {
   const auth = getAuth();
   const provider = new GoogleAuthProvider();
-
   try {
-    const result = await signInWithPopup(auth, provider);
-    const user = result.user;
-    console.log('User signed in: ', user);
-
-    // หลังจากล็อกอินสำเร็จให้ทำการ redirect ไปยังหน้า /home
-    navigate('/home');
+    const userCredential = await signInWithPopup(auth, provider);
+    return userCredential;  // คืนค่า userCredential
   } catch (error) {
-    console.error("Error signing in with Google: ", error);
+    console.error('Error signing in with Google:', error);
+    throw error;  // ส่ง error ออกไปให้ component handle
   }
-};
+}
+
 
 // ฟังก์ชันสำหรับการออกจากระบบ
-export const logout = async () => {
+export const logout = async (navigate) => {
   const auth = getAuth();
   
   try {
     await signOut(auth);  // เรียกใช้ฟังก์ชัน signOut ของ Firebase
     console.log("User signed out successfully");
-    // เมื่อ logout เสร็จให้ทำการ redirect ไปยังหน้า login หรือหน้าอื่นๆ ตามที่ต้องการ
-    window.location.href = "/";  // เปลี่ยนเส้นทางไปที่หน้า login
+
+    // ลบข้อมูลผู้ใช้จาก LocalStorage
+    localStorage.removeItem('user');
+
+    // ใช้ navigate เพื่อไปหน้า login
+    navigate('/');  // เปลี่ยนเส้นทางไปที่หน้า login
   } catch (error) {
     console.error("Error signing out: ", error);
   }
 };
+
