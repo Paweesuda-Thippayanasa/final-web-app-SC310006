@@ -1,21 +1,41 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { getFirestore, doc, setDoc } from 'firebase/firestore'; 
+import { getFirestore, doc, setDoc } from 'firebase/firestore';
 import { getAuth } from 'firebase/auth';
 
 const AddCourse = () => {
   const navigate = useNavigate();
   const auth = getAuth();
-  const db = getFirestore(); // สำหรับการเชื่อมต่อกับ Firestore
+  const db = getFirestore();
   
   const [formData, setFormData] = useState({
     courseCode: '',
     courseName: '',
     className: '',
-    imageUrl: '', // รูปภาพจะเป็น URL ที่ผู้ใช้กรอก
+    imageUrl: '',
   });
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [imagePreview, setImagePreview] = useState(null);
+  const [imageError, setImageError] = useState(false);
+
+  useEffect(() => {
+    if (formData.imageUrl) {
+      const img = new Image();
+      img.onload = () => {
+        setImagePreview(formData.imageUrl);
+        setImageError(false);
+      };
+      img.onerror = () => {
+        setImagePreview(null);
+        setImageError(true);
+      };
+      img.src = formData.imageUrl;
+    } else {
+      setImagePreview(null);
+      setImageError(false);
+    }
+  }, [formData.imageUrl]);
 
   const handleChange = (e) => {
     setFormData({
@@ -46,27 +66,14 @@ const AddCourse = () => {
 
       let imageUrl = formData.imageUrl;
       
-      // หากผู้ใช้ไม่ได้กรอก URL ของรูปภาพ จะใช้ URL เริ่มต้น
-      if (!imageUrl || !imageUrl.startsWith('http')) {
+      if (!imageUrl || !imageUrl.startsWith('http') || imageError) {
         imageUrl = 'https://via.placeholder.com/400x200?text=No+Image';
       }
 
-      const cid = generateCid(); // สร้าง unique course ID
+      const cid = generateCid();
 
-      // บันทึกข้อมูลวิชาใน Firestore
       await setDoc(doc(db, "classroom", cid), {
         owner: currentUser.uid,
-        info: {
-          code: formData.courseCode,
-          name: formData.courseName,
-          room: formData.className,
-          photo: imageUrl // บันทึกรูปภาพในรูปแบบ URL
-        }
-      });
-
-      // บันทึกข้อมูลวิชาในโปรไฟล์ของผู้ใช้
-      await setDoc(doc(db, "users", currentUser.uid, "classroom", cid), {
-        status: 1, 
         info: {
           code: formData.courseCode,
           name: formData.courseName,
@@ -75,7 +82,17 @@ const AddCourse = () => {
         }
       });
 
-      navigate('/home'); // ไปที่หน้า home หลังจากบันทึกข้อมูลเสร็จ
+      await setDoc(doc(db, "users", currentUser.uid, "classroom", cid), {
+        status: 1,
+        info: {
+          code: formData.courseCode,
+          name: formData.courseName,
+          room: formData.className,
+          photo: imageUrl
+        }
+      });
+
+      navigate('/home');
 
     } catch (error) {
       console.error('Error adding course:', error);
@@ -86,89 +103,123 @@ const AddCourse = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-100 py-8">
-      <div className="max-w-2xl mx-auto px-4">
-        <div className="bg-white rounded-lg shadow-md p-6">
-          <h2 className="text-2xl font-bold mb-6">เพิ่มวิชาใหม่</h2>
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 py-12">
+      <div className="max-w-3xl mx-auto px-4">
+        <div className="bg-white rounded-2xl shadow-xl overflow-hidden">
+          <div className="bg-gradient-to-r from-blue-600 to-indigo-600 px-6 py-8">
+            <h2 className="text-3xl font-bold text-white">เพิ่มวิชาใหม่</h2>
+            <p className="text-blue-100 mt-2 text-lg">สร้างรายวิชาใหม่สำหรับการเรียนการสอน</p>
+          </div>
           
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                รหัสวิชา
-              </label>
-              <input
-                type="text"
-                name="courseCode"
-                value={formData.courseCode}
-                onChange={handleChange}
-                placeholder="เช่น SC310001"
-                required
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
-            </div>
+          <form onSubmit={handleSubmit} className="p-8 space-y-8">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+              <div className="space-y-6">
+                <div>
+                  <label className="block text-base font-semibold text-gray-700 mb-2">
+                    รหัสวิชา
+                  </label>
+                  <input
+                    type="text"
+                    name="courseCode"
+                    value={formData.courseCode}
+                    onChange={handleChange}
+                    placeholder="เช่น SC310001"
+                    required
+                    className="w-full px-4 py-3 bg-gray-50 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent focus:bg-white transition-all duration-200"
+                  />
+                </div>
 
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                ชื่อวิชา
-              </label>
-              <input
-                type="text"
-                name="courseName"
-                value={formData.courseName}
-                onChange={handleChange}
-                placeholder="เช่น Computer Programming"
-                required
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
-            </div>
+                <div>
+                  <label className="block text-base font-semibold text-gray-700 mb-2">
+                    ชื่อวิชา
+                  </label>
+                  <input
+                    type="text"
+                    name="courseName"
+                    value={formData.courseName}
+                    onChange={handleChange}
+                    placeholder="เช่น Computer Programming"
+                    required
+                    className="w-full px-4 py-3 bg-gray-50 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent focus:bg-white transition-all duration-200"
+                  />
+                </div>
 
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                ห้องเรียน
-              </label>
-              <input
-                type="text"
-                name="className"
-                value={formData.className}
-                onChange={handleChange}
-                placeholder="เช่น SC5101"
-                required
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
-            </div>
+                <div>
+                  <label className="block text-base font-semibold text-gray-700 mb-2">
+                    ห้องเรียน
+                  </label>
+                  <input
+                    type="text"
+                    name="className"
+                    value={formData.className}
+                    onChange={handleChange}
+                    placeholder="เช่น SC5101"
+                    required
+                    className="w-full px-4 py-3 bg-gray-50 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent focus:bg-white transition-all duration-200"
+                  />
+                </div>
+              </div>
 
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                URL รูปภาพ
-              </label>
-              <input
-                type="url"
-                name="imageUrl"
-                value={formData.imageUrl}
-                onChange={handleChange}
-                placeholder="https://example.com/image.jpg"
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
+              <div className="space-y-6">
+                <div>
+                  <label className="block text-base font-semibold text-gray-700 mb-2">
+                    รูปภาพปก
+                  </label>
+                  <input
+                    type="url"
+                    name="imageUrl"
+                    value={formData.imageUrl}
+                    onChange={handleChange}
+                    placeholder="https://example.com/image.jpg"
+                    className="w-full px-4 py-3 bg-gray-50 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent focus:bg-white transition-all duration-200"
+                  />
+                  {imageError && (
+                    <p className="mt-2 text-sm text-red-600">
+                      ไม่สามารถโหลดรูปภาพได้ กรุณาตรวจสอบ URL อีกครั้ง
+                    </p>
+                  )}
+                  <p className="mt-2 text-sm text-gray-500">
+                    ระบุ URL ของรูปภาพที่ต้องการใช้เป็นปกรายวิชา
+                  </p>
+                </div>
+
+                <div className="mt-4">
+                  <p className="text-base font-semibold text-gray-700 mb-2">ตัวอย่างรูปภาพ</p>
+                  <div className="border-2 border-gray-200 rounded-xl overflow-hidden aspect-video bg-gray-100">
+                    {imagePreview ? (
+                      <img
+                        src={imagePreview}
+                        alt="Course preview"
+                        className="w-full h-full object-cover"
+                      />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center text-gray-400">
+                        {imageError ? 'ไม่สามารถโหลดรูปภาพได้' : 'ไม่มีรูปภาพ'}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
             </div>
 
             {error && (
-              <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded">
-                {error}
+              <div className="bg-red-50 border-l-4 border-red-500 p-4 rounded-r-xl">
+                <p className="text-sm text-red-700">{error}</p>
               </div>
             )}
 
-            <div className="flex justify-end space-x-4 mt-6">
+            <div className="flex justify-end space-x-4 pt-6">
               <button
                 type="button"
                 onClick={() => navigate('/home')}
-                className="px-4 py-2 border border-gray-300 rounded-md hover:bg-gray-50"
+                className="px-6 py-3 border-2 border-gray-300 rounded-xl text-gray-700 font-semibold hover:bg-gray-50 hover:border-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-200 transition-all duration-200"
               >
                 ยกเลิก
               </button>
               <button
                 type="submit"
                 disabled={loading}
-                className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 disabled:bg-blue-300"
+                className="px-8 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-xl font-semibold hover:from-blue-700 hover:to-indigo-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
               >
                 {loading ? 'กำลังบันทึก...' : 'บันทึก'}
               </button>
