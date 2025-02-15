@@ -21,7 +21,6 @@ const HomePage = () => {
 
 	useEffect(() => {
 		const currentUser = auth.currentUser;
-		console.log("Current User UID:", currentUser?.uid);  // ตรวจสอบ UID ของผู้ใช้ที่เข้าสู่ระบบ
 		if (currentUser) {
 		  setUser(currentUser);
 		  
@@ -33,8 +32,7 @@ const HomePage = () => {
 			const querySnapshot = await getDocs(q);
 			const coursesList = querySnapshot.docs.map((doc) => {
 			  const data = doc.data();
-			  console.log("Course Data from Firestore:", data);  // ตรวจสอบข้อมูลที่ดึงมา
-		  
+
 			  return {
 				id: doc.id,
 				name: data.info?.name || "ไม่มีชื่อวิชา",  // ดึงชื่อจาก data.info
@@ -43,7 +41,7 @@ const HomePage = () => {
 				photo: data.info?.photo || "https://via.placeholder.com/400x200?text=No+Image",  // ดึงรูปภาพจาก data.info
 			  };
 			});
-			console.log("Mapped Courses List:", coursesList);  // ตรวจสอบหลังจากที่แม็ปข้อมูลแล้ว
+
 			setCourses(coursesList);
 		  };
 		  
