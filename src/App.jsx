@@ -5,6 +5,7 @@ import LoginPage from "./components/LoginComponent";
 import HomePage from "./components/HomePage";
 import EditProfilePage from "./components/EditProfilePage";
 import AddCourse from "./components/AddCourse";
+import ManageClassroom from "./components/ManageClassroom";
 
 function App() {
 
@@ -15,7 +16,7 @@ function App() {
 				<Route path="/home" element={<HomePage />} />
 				<Route path="/edit-profile" element={<EditProfilePage/>} />
 				<Route path="/add-course" element={<AddCourse/>} />
-				
+				<Route path="/manage-classroom/:id" element={<ManageClassroom />} /> 
 			</Routes>
 		</div>
 	);
