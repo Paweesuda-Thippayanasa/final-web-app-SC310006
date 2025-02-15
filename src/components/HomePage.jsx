@@ -1,75 +1,74 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { getAuth, signOut } from "firebase/auth";
-import { getDatabase, ref, onValue } from "firebase/database";
+import {
+	getFirestore,
+	collection,
+	query,
+	where,
+	getDocs,
+} from "firebase/firestore"; // Import Firestore methods
 import { Link } from "react-router-dom";
 import "../css/hompage.css";
 
 const HomePage = () => {
 	const navigate = useNavigate();
 	const auth = getAuth();
-	const db = getDatabase();
+	const db = getFirestore(); // Get Firestore instance
 	const [courses, setCourses] = useState([]);
 	const [user, setUser] = useState(null);
 	const [showLogoutDialog, setShowLogoutDialog] = useState(false);
 
 	useEffect(() => {
-    const currentUser = auth.currentUser;
-    if (currentUser) {
-      setUser(currentUser);
-  
-      const userCoursesRef = ref(db, `/users/${currentUser.uid}/classroom`);
-      onValue(userCoursesRef, (snapshot) => {
-        const coursesData = snapshot.val();
-        if (coursesData) {
-          const coursesList = [];
-          Object.keys(coursesData).forEach((cid) => {
-            const courseRef = ref(db, `/users/${currentUser.uid}/classroom/${cid}/info`);
-            onValue(courseRef, (courseSnapshot) => {
-              const course = courseSnapshot.val();
-              if (course) {
-                // เพิ่มข้อมูลวิชาใหม่ใน coursesList
-                coursesList.push({
-                  id: cid,
-                  ...course
-                });
-              }
-            });
-          });
-  
-          // หลังจากโหลดข้อมูลครบแล้ว อัปเดต state ของ courses
-          setCourses(coursesList);
-        }
-      });
-    } else {
-      navigate('/');
-    }
-  }, [auth, db, navigate]);
-  
-
+		const currentUser = auth.currentUser;
+		console.log("Current User UID:", currentUser?.uid);  // ตรวจสอบ UID ของผู้ใช้ที่เข้าสู่ระบบ
+		if (currentUser) {
+		  setUser(currentUser);
+		  
+		  // ตรวจสอบว่า `currentUser.uid` ถูกต้องหรือไม่
+		  const coursesRef = collection(db, "classroom");
+		  const q = query(coursesRef, where("owner", "==", currentUser.uid));
+	  
+		  const fetchCourses = async () => {
+			const querySnapshot = await getDocs(q);
+			const coursesList = querySnapshot.docs.map((doc) => {
+			  const data = doc.data();
+			  console.log("Course Data from Firestore:", data);  // ตรวจสอบข้อมูลที่ดึงมา
+		  
+			  return {
+				id: doc.id,
+				name: data.info?.name || "ไม่มีชื่อวิชา",  // ดึงชื่อจาก data.info
+				code: data.info?.code || "ไม่มีรหัสวิชา",  // ดึงรหัสวิชาจาก data.info
+				room: data.info?.room || "ไม่มีห้องเรียน",  // ดึงห้องเรียนจาก data.info
+				photo: data.info?.photo || "https://via.placeholder.com/400x200?text=No+Image",  // ดึงรูปภาพจาก data.info
+			  };
+			});
+			console.log("Mapped Courses List:", coursesList);  // ตรวจสอบหลังจากที่แม็ปข้อมูลแล้ว
+			setCourses(coursesList);
+		  };
+		  
+	  
+		  fetchCourses();
+		} else {
+		  navigate("/"); // ถ้าไม่ได้เข้าสู่ระบบ ให้ไปหน้า Login
+		}
+	  }, [auth, db, navigate]);
+	  
+	// ฟังก์ชันจัดการคลิกปุ่ม Logout
 	const handleLogoutClick = () => {
 		setShowLogoutDialog(true);
 	};
-  useEffect(() => {
-    const storedUser = localStorage.getItem('user');
-    if (storedUser) {
-      setUser(JSON.parse(storedUser));
-    } else {
-      navigate('/'); // หากไม่มีข้อมูลผู้ใช้ ให้กลับไปที่หน้า Login
-    }
-  }, [navigate]);
-  
-  const handleConfirmLogout = async () => {
-    try {
-      await signOut(auth);
-      // ลบข้อมูลผู้ใช้จาก localStorage
-      localStorage.removeItem('user');
-      navigate("/", { replace: true });
-    } catch (error) {
-      console.error("Logout error:", error);
-    }
-  };
-  
+
+	// ฟังก์ชันยืนยันการ Logout
+	const handleConfirmLogout = async () => {
+		try {
+			await signOut(auth);
+			localStorage.removeItem("user");
+			navigate("/", { replace: true });
+		} catch (error) {
+			console.error("Logout error:", error);
+		}
+	};
 
 	const handleCancelLogout = () => {
 		setShowLogoutDialog(false);
@@ -137,18 +136,18 @@ const HomePage = () => {
 									className="h-40 bg-cover bg-center"
 									style={{
 										backgroundImage: `url(${
-											course.imageUrl ||
+											course.photo ||
 											"https://via.placeholder.com/400x200?text=No+Image"
 										})`,
 									}}
 								></div>
 								<div className="p-4">
-									<h3 className="text-lg font-medium">{course.courseName}</h3>
+									<h3 className="text-lg font-medium">{course.name}</h3>
 									<p className="text-gray-600 text-sm">
-										รหัสวิชา: {course.courseCode}
+										รหัสวิชา: {course.code}
 									</p>
 									<p className="text-gray-600 text-sm mb-4">
-										ห้องเรียน: {course.className}
+										ห้องเรียน: {course.room}
 									</p>
 									<Link
 										to={`/manage-classroom/${course.id}`}
@@ -165,7 +164,7 @@ const HomePage = () => {
 
 			{/* Logout Confirmation Modal */}
 			{showLogoutDialog && (
-				<div className="fixed inset-0  flex items-center justify-center z-50 popup-logout">
+				<div className="fixed inset-0 flex items-center justify-center z-50 popup-logout">
 					<div className="bg-white rounded-lg p-6 max-w-sm w-full mx-4">
 						<h3 className="text-lg font-semibold mb-2">ยืนยันการออกจากระบบ</h3>
 						<p className="text-gray-600 mb-4">

@@ -63,17 +63,20 @@ const EditProfilePage = () => {
 
       let updatedPhotoURL = photoURL;
 
+      // อัปโหลดภาพใหม่ถ้ามี
       if (newPhotoFile) {
         const imageRef = storageRef(storage, `profile_images/${currentUser.uid}/${Date.now()}_${newPhotoFile.name}`);
         await uploadBytes(imageRef, newPhotoFile);
         updatedPhotoURL = await getDownloadURL(imageRef);
       }
 
+      // อัปเดตข้อมูลผู้ใช้ใน Firebase Authentication
       await currentUser.updateProfile({
         displayName,
         photoURL: updatedPhotoURL
       });
 
+      // อัปเดตข้อมูลผู้ใช้ใน Realtime Database
       await set(ref(db, `/users/${currentUser.uid}/profile`), {
         displayName,
         email,
@@ -84,7 +87,7 @@ const EditProfilePage = () => {
       
       setNewPhotoFile(null);
       const fileInput = document.getElementById('photo-upload');
-      if (fileInput) fileInput.value = '';
+      if (fileInput) fileInput.value = '';  // รีเซ็ตค่า input ของไฟล์
     } catch (error) {
       console.error('Error updating profile:', error);
       setErrorMessage('เกิดข้อผิดพลาดในการอัปเดตข้อมูล: ' + error.message);
