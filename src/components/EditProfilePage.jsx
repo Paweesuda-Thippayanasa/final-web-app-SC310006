@@ -83,21 +83,24 @@ const EditProfilePage = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50">
-      <div className="container mx-auto px-4 py-16">
-        <div className="max-w-2xl mx-auto">
-          <div className="bg-white rounded-3xl shadow-xl overflow-hidden">
-            {/* Header */}
-            <div className="px-8 py-6 bg-gradient-to-r from-blue-600 to-blue-800 relative overflow-hidden">
-              <div className="absolute inset-0 bg-[linear-gradient(40deg,rgba(255,255,255,0.1)_0%,rgba(255,255,255,0.1)_100%)]"></div>
-              <h1 className="text-3xl font-bold text-white text-center relative z-10">แก้ไขข้อมูลส่วนตัว</h1>
+    <div className="min-h-screen bg-gradient-to-br from-indigo-100 via-white to-purple-100">
+      <div className="container mx-auto px-4 py-12 sm:px-6 lg:px-8">
+        <div className="max-w-3xl mx-auto">
+          <div className="backdrop-blur-sm bg-white/80 rounded-3xl shadow-2xl overflow-hidden border border-white/50">
+            {/* Header with improved gradient and pattern */}
+            <div className="px-8 py-8 bg-gradient-to-r from-indigo-600 to-purple-600 relative">
+              <div className="absolute inset-0 bg-pattern opacity-10"></div>
+              <div className="relative z-10">
+                <h1 className="text-3xl font-bold text-white text-center mb-2">แก้ไขข้อมูลส่วนตัว</h1>
+                <p className="text-indigo-100 text-center text-sm">ปรับแต่งโปรไฟล์ของคุณให้ตรงกับตัวตน</p>
+              </div>
             </div>
 
-            <form onSubmit={handleSubmit} className="p-8">
-              {/* Profile Image Section */}
-              <div className="mb-10">
-                <div className="relative w-32 h-32 mx-auto">
-                  <div className="w-full h-full rounded-full border-4 border-white shadow-lg overflow-hidden bg-gradient-to-br from-gray-50 to-gray-100">
+            <form onSubmit={handleSubmit} className="p-8 sm:p-10">
+              {/* Profile Image Section with improved styling */}
+              <div className="mb-12">
+                <div className="relative w-36 h-36 mx-auto">
+                  <div className="w-full h-full rounded-full border-4 border-white shadow-xl overflow-hidden bg-gradient-to-br from-indigo-50 to-purple-50 ring-4 ring-indigo-100/50">
                     {(photoURL || newPhotoURL) ? (
                       <img
                         src={newPhotoURL || photoURL}
@@ -111,13 +114,13 @@ const EditProfilePage = () => {
                         }}
                       />
                     ) : (
-                      <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-blue-50 to-blue-100">
-                        <span className="text-4xl text-blue-300">👤</span>
+                      <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-indigo-50 to-purple-50">
+                        <span className="text-5xl">👤</span>
                       </div>
                     )}
                   </div>
-                  <div className="absolute -bottom-2 -right-2 p-2 bg-white rounded-full shadow-lg">
-                    <svg className="w-5 h-5 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <div className="absolute -bottom-2 -right-2 p-2.5 bg-white rounded-full shadow-lg ring-2 ring-indigo-100/50">
+                    <svg className="w-6 h-6 text-indigo-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
                     </svg>
@@ -125,11 +128,11 @@ const EditProfilePage = () => {
                 </div>
               </div>
 
-              {/* Alert Messages */}
+              {/* Alert Messages with improved styling */}
               {errorMessage && (
-                <div className="mb-6 p-4 bg-red-50 border border-red-100 rounded-xl animate-fadeIn">
+                <div className="mb-8 p-4 bg-red-50/80 backdrop-blur-sm border border-red-200 rounded-2xl animate-fadeIn">
                   <div className="flex items-center text-red-700">
-                    <svg className="w-5 h-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <svg className="w-5 h-5 mr-3 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                     </svg>
                     <p className="text-sm font-medium">{errorMessage}</p>
@@ -138,9 +141,9 @@ const EditProfilePage = () => {
               )}
 
               {successMessage && (
-                <div className="mb-6 p-4 bg-green-50 border border-green-100 rounded-xl animate-fadeIn">
+                <div className="mb-8 p-4 bg-green-50/80 backdrop-blur-sm border border-green-200 rounded-2xl animate-fadeIn">
                   <div className="flex items-center text-green-700">
-                    <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg className="w-5 h-5 mr-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
                     </svg>
                     <p className="text-sm font-medium">{successMessage}</p>
@@ -148,8 +151,8 @@ const EditProfilePage = () => {
                 </div>
               )}
 
-              <div className="space-y-6">
-                {/* Display Name Input */}
+              <div className="space-y-8">
+                {/* Display Name Input with improved styling */}
                 <div>
                   <label htmlFor="display-name" className="block text-sm font-medium text-gray-700 mb-2">
                     ชื่อผู้ใช้
@@ -159,11 +162,11 @@ const EditProfilePage = () => {
                     id="display-name"
                     value={displayName}
                     onChange={(e) => setDisplayName(e.target.value)}
-                    className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200"
+                    className="w-full px-4 py-3.5 bg-white/50 backdrop-blur-sm border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all duration-200"
                   />
                 </div>
 
-                {/* Email Input */}
+                {/* Email Input with improved styling */}
                 <div>
                   <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
                     อีเมล
@@ -174,11 +177,11 @@ const EditProfilePage = () => {
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     disabled
-                    className="w-full px-4 py-3 bg-gray-100 border border-gray-200 rounded-xl text-gray-500 cursor-not-allowed"
+                    className="w-full px-4 py-3.5 bg-gray-100/80 backdrop-blur-sm border border-gray-200 rounded-xl text-gray-500 cursor-not-allowed"
                   />
                 </div>
 
-                {/* Photo URL Input */}
+                {/* Photo URL Input with improved styling */}
                 <div>
                   <label htmlFor="photo-url" className="block text-sm font-medium text-gray-700 mb-2">
                     ใส่ลิงก์รูปภาพใหม่
@@ -189,24 +192,24 @@ const EditProfilePage = () => {
                     value={newPhotoURL}
                     onChange={(e) => setNewPhotoURL(e.target.value)}
                     placeholder="ใส่ URL รูปภาพ"
-                    className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200"
+                    className="w-full px-4 py-3.5 bg-white/50 backdrop-blur-sm border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all duration-200"
                   />
                 </div>
               </div>
 
-              {/* Action Buttons */}
-              <div className="mt-10 flex justify-end space-x-4">
+              {/* Action Buttons with improved styling */}
+              <div className="mt-12 flex justify-end space-x-4">
                 <button
                   type="button"
                   onClick={() => navigate("/home")}
-                  className="px-6 py-2.5 border border-gray-200 rounded-xl text-gray-700 hover:bg-gray-50 transition-all duration-200 font-medium focus:ring-2 focus:ring-gray-200"
+                  className="px-6 py-3 border border-gray-200 rounded-xl text-gray-700 hover:bg-gray-50 transition-all duration-200 font-medium focus:ring-2 focus:ring-gray-200 backdrop-blur-sm"
                 >
                   ยกเลิก
                 </button>
                 <button
                   type="submit"
                   disabled={isLoading}
-                  className="px-6 py-2.5 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-xl hover:from-blue-700 hover:to-blue-800 transition-all duration-200 disabled:opacity-70 disabled:cursor-not-allowed font-medium focus:ring-2 focus:ring-blue-500"
+                  className="px-6 py-3 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-xl hover:from-indigo-700 hover:to-purple-700 transition-all duration-200 disabled:opacity-70 disabled:cursor-not-allowed font-medium focus:ring-2 focus:ring-indigo-500 shadow-lg shadow-indigo-500/20"
                 >
                   {isLoading ? (
                     <span className="flex items-center">

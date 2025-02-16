@@ -103,128 +103,153 @@ const AddCourse = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 py-12">
-      <div className="max-w-3xl mx-auto px-4">
-        <div className="bg-white rounded-2xl shadow-xl overflow-hidden">
-          <div className="bg-gradient-to-r from-blue-600 to-indigo-600 px-6 py-8">
-            <h2 className="text-3xl font-bold text-white">เพิ่มวิชาใหม่</h2>
-            <p className="text-blue-100 mt-2 text-lg">สร้างรายวิชาใหม่สำหรับการเรียนการสอน</p>
-          </div>
-          
-          <form onSubmit={handleSubmit} className="p-8 space-y-8">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-              <div className="space-y-6">
-                <div>
-                  <label className="block text-base font-semibold text-gray-700 mb-2">
-                    รหัสวิชา
-                  </label>
-                  <input
-                    type="text"
-                    name="courseCode"
-                    value={formData.courseCode}
-                    onChange={handleChange}
-                    placeholder="เช่น SC310001"
-                    required
-                    className="w-full px-4 py-3 bg-gray-50 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent focus:bg-white transition-all duration-200"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-base font-semibold text-gray-700 mb-2">
-                    ชื่อวิชา
-                  </label>
-                  <input
-                    type="text"
-                    name="courseName"
-                    value={formData.courseName}
-                    onChange={handleChange}
-                    placeholder="เช่น Computer Programming"
-                    required
-                    className="w-full px-4 py-3 bg-gray-50 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent focus:bg-white transition-all duration-200"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-base font-semibold text-gray-700 mb-2">
-                    ห้องเรียน
-                  </label>
-                  <input
-                    type="text"
-                    name="className"
-                    value={formData.className}
-                    onChange={handleChange}
-                    placeholder="เช่น SC5101"
-                    required
-                    className="w-full px-4 py-3 bg-gray-50 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent focus:bg-white transition-all duration-200"
-                  />
-                </div>
+    <div className="min-h-screen bg-gradient-to-br from-indigo-100 via-white to-purple-100 py-16">
+      <div className="container mx-auto px-4">
+        <div className="max-w-4xl mx-auto">
+          <div className="backdrop-blur-xl bg-white/90 rounded-3xl shadow-2xl overflow-hidden border border-white/50 transform hover:scale-[1.01] transition-all duration-300">
+            <div className="px-8 py-12 bg-gradient-to-r from-indigo-600 to-purple-600 relative overflow-hidden">
+              <div className="absolute inset-0 bg-[radial-gradient(circle_at_100%_100%,rgba(255,255,255,0.2)_0%,transparent_50%)] opacity-70"></div>
+              <div className="absolute -right-20 -top-20 w-64 h-64 bg-purple-500/30 rounded-full blur-3xl"></div>
+              <div className="absolute -left-20 -bottom-20 w-64 h-64 bg-indigo-500/30 rounded-full blur-3xl"></div>
+              <div className="relative z-10">
+                <h1 className="text-4xl font-bold text-white text-center mb-3 tracking-tight">เพิ่มวิชาใหม่</h1>
+                <p className="text-indigo-100 text-center text-lg font-light">สร้างรายวิชาใหม่สำหรับการเรียนการสอน</p>
               </div>
+            </div>
 
-              <div className="space-y-6">
-                <div>
-                  <label className="block text-base font-semibold text-gray-700 mb-2">
-                    รูปภาพปก
-                  </label>
-                  <input
-                    type="url"
-                    name="imageUrl"
-                    value={formData.imageUrl}
-                    onChange={handleChange}
-                    placeholder="https://example.com/image.jpg"
-                    className="w-full px-4 py-3 bg-gray-50 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent focus:bg-white transition-all duration-200"
-                  />
-                  {imageError && (
-                    <p className="mt-2 text-sm text-red-600">
-                      ไม่สามารถโหลดรูปภาพได้ กรุณาตรวจสอบ URL อีกครั้ง
-                    </p>
-                  )}
-                  <p className="mt-2 text-sm text-gray-500">
-                    ระบุ URL ของรูปภาพที่ต้องการใช้เป็นปกรายวิชา
-                  </p>
+            <form onSubmit={handleSubmit} className="p-10 space-y-8">
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-10">
+                <div className="space-y-6">
+                  <div className="group">
+                    <label className="block text-base font-medium text-gray-700 mb-2 group-focus-within:text-indigo-600 transition-colors">
+                      รหัสวิชา
+                    </label>
+                    <input
+                      type="text"
+                      name="courseCode"
+                      value={formData.courseCode}
+                      onChange={handleChange}
+                      placeholder="เช่น SC310001"
+                      required
+                      className="w-full px-5 py-4 bg-white/80 backdrop-blur-sm border-2 border-gray-100 rounded-2xl focus:ring-4 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all duration-300 placeholder:text-gray-400"
+                    />
+                  </div>
+
+                  <div className="group">
+                    <label className="block text-base font-medium text-gray-700 mb-2 group-focus-within:text-indigo-600 transition-colors">
+                      ชื่อวิชา
+                    </label>
+                    <input
+                      type="text"
+                      name="courseName"
+                      value={formData.courseName}
+                      onChange={handleChange}
+                      placeholder="เช่น Computer Programming"
+                      required
+                      className="w-full px-5 py-4 bg-white/80 backdrop-blur-sm border-2 border-gray-100 rounded-2xl focus:ring-4 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all duration-300 placeholder:text-gray-400"
+                    />
+                  </div>
+
+                  <div className="group">
+                    <label className="block text-base font-medium text-gray-700 mb-2 group-focus-within:text-indigo-600 transition-colors">
+                      ห้องเรียน
+                    </label>
+                    <input
+                      type="text"
+                      name="className"
+                      value={formData.className}
+                      onChange={handleChange}
+                      placeholder="เช่น SC5101"
+                      required
+                      className="w-full px-5 py-4 bg-white/80 backdrop-blur-sm border-2 border-gray-100 rounded-2xl focus:ring-4 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all duration-300 placeholder:text-gray-400"
+                    />
+                  </div>
                 </div>
 
-                <div className="mt-4">
-                  <p className="text-base font-semibold text-gray-700 mb-2">ตัวอย่างรูปภาพ</p>
-                  <div className="border-2 border-gray-200 rounded-xl overflow-hidden aspect-video bg-gray-100">
-                    {imagePreview ? (
-                      <img
-                        src={imagePreview}
-                        alt="Course preview"
-                        className="w-full h-full object-cover"
-                      />
-                    ) : (
-                      <div className="w-full h-full flex items-center justify-center text-gray-400">
-                        {imageError ? 'ไม่สามารถโหลดรูปภาพได้' : 'ไม่มีรูปภาพ'}
+                <div className="space-y-6">
+                  <div className="group">
+                    <label className="block text-base font-medium text-gray-700 mb-2 group-focus-within:text-indigo-600 transition-colors">
+                      รูปภาพปก
+                    </label>
+                    <input
+                      type="url"
+                      name="imageUrl"
+                      value={formData.imageUrl}
+                      onChange={handleChange}
+                      placeholder="https://example.com/image.jpg"
+                      className="w-full px-5 py-4 bg-white/80 backdrop-blur-sm border-2 border-gray-100 rounded-2xl focus:ring-4 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all duration-300 placeholder:text-gray-400"
+                    />
+                    {imageError && (
+                      <div className="mt-3 p-4 bg-red-50/90 backdrop-blur-sm border-2 border-red-100 rounded-2xl animate-pulse">
+                        <div className="flex items-center text-red-700">
+                          <svg className="w-5 h-5 mr-3 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                          </svg>
+                          <p className="text-sm font-medium">ไม่สามารถโหลดรูปภาพได้ กรุณาตรวจสอบ URL อีกครั้ง</p>
+                        </div>
                       </div>
                     )}
                   </div>
+
+                  <div className="mt-6">
+                    <p className="text-base font-medium text-gray-700 mb-2">ตัวอย่างรูปภาพ</p>
+                    <div className="border-2 border-gray-100 rounded-2xl overflow-hidden aspect-video bg-white/80 backdrop-blur-sm group hover:border-indigo-200 transition-all duration-300">
+                      {imagePreview ? (
+                        <img
+                          src={imagePreview}
+                          alt="Course preview"
+                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                        />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center text-gray-400 text-lg">
+                          {imageError ? 'ไม่สามารถโหลดรูปภาพได้' : 'ไม่มีรูปภาพ'}
+                        </div>
+                      )}
+                    </div>
+                  </div>
                 </div>
               </div>
-            </div>
 
-            {error && (
-              <div className="bg-red-50 border-l-4 border-red-500 p-4 rounded-r-xl">
-                <p className="text-sm text-red-700">{error}</p>
+              {error && (
+                <div className="p-4 bg-red-50/90 backdrop-blur-sm border-2 border-red-100 rounded-2xl animate-pulse">
+                  <div className="flex items-center text-red-700">
+                    <svg className="w-5 h-5 mr-3 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                    <p className="text-sm font-medium">{error}</p>
+                  </div>
+                </div>
+              )}
+
+              <div className="flex justify-end space-x-4 pt-8 border-t border-gray-100">
+                <button
+                  type="button"
+                  onClick={() => navigate('/home')}
+                  className="px-8 py-4 border-2 border-gray-200 rounded-2xl text-gray-700 hover:bg-gray-50 hover:border-gray-300 transition-all duration-300 font-medium focus:ring-4 focus:ring-gray-200/50 backdrop-blur-sm text-base"
+                >
+                  ยกเลิก
+                </button>
+                <button
+                  type="submit"
+                  disabled={loading}
+                  className="px-8 py-4 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-2xl hover:from-indigo-700 hover:to-purple-700 transition-all duration-300 disabled:opacity-70 disabled:cursor-not-allowed font-medium focus:ring-4 focus:ring-indigo-500/50 shadow-xl shadow-indigo-500/20 text-base relative overflow-hidden group"
+                >
+                  <div className="absolute inset-0 bg-[radial-gradient(circle_at_100%_100%,rgba(255,255,255,0.2)_0%,transparent_50%)] opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+                  {loading ? (
+                    <span className="flex items-center">
+                      <svg className="animate-spin -ml-1 mr-2 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                      </svg>
+                      กำลังบันทึก...
+                    </span>
+                  ) : (
+                    "บันทึก"
+                  )}
+                </button>
               </div>
-            )}
-
-            <div className="flex justify-end space-x-4 pt-6">
-              <button
-                type="button"
-                onClick={() => navigate('/home')}
-                className="px-6 py-3 border-2 border-gray-300 rounded-xl text-gray-700 font-semibold hover:bg-gray-50 hover:border-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-200 transition-all duration-200"
-              >
-                ยกเลิก
-              </button>
-              <button
-                type="submit"
-                disabled={loading}
-                className="px-8 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-xl font-semibold hover:from-blue-700 hover:to-indigo-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
-              >
-                {loading ? 'กำลังบันทึก...' : 'บันทึก'}
-              </button>
-            </div>
-          </form>
+            </form>
+          </div>
         </div>
       </div>
     </div>
