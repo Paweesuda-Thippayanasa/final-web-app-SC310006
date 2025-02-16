@@ -1,7 +1,7 @@
 {
   "expo": {
     "name": "ClassRoom_App",
-    "slug": "ClassRoom_App",
+    "slug": "classroomapp",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
@@ -9,7 +9,11 @@
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.kwasio.classroomapp",
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false
+      }
     },
     "android": {
       "adaptiveIcon": {
@@ -36,6 +40,15 @@
     ],
     "experiments": {
       "typedRoutes": true
-    }
+    },
+    "extra": {
+      "router": {
+        "origin": false
+      },
+      "eas": {
+        "projectId": "6a40d81a-3130-42d1-b3a3-09958bbc1b89"
+      }
+    },
+    "owner": "kwasio"
   }
 }
