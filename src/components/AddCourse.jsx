@@ -106,7 +106,7 @@ const AddCourse = () => {
     <div className="min-h-screen bg-gradient-to-br from-indigo-100 via-white to-purple-100 py-16">
       <div className="container mx-auto px-4">
         <div className="max-w-4xl mx-auto">
-          <div className="backdrop-blur-xl bg-white/90 rounded-3xl shadow-2xl overflow-hidden border border-white/50 transform hover:scale-[1.01] transition-all duration-300">
+          <div className=" bg-white/90 rounded-3xl shadow-2xl overflow-hidden border border-white/50 transform hover:scale-[1.01] transition-all duration-300">
             <div className="px-8 py-12 bg-gradient-to-r from-indigo-600 to-purple-600 relative overflow-hidden">
               <div className="absolute inset-0 bg-[radial-gradient(circle_at_100%_100%,rgba(255,255,255,0.2)_0%,transparent_50%)] opacity-70"></div>
               <div className="absolute -right-20 -top-20 w-64 h-64 bg-purple-500/30 rounded-full blur-3xl"></div>
@@ -131,7 +131,7 @@ const AddCourse = () => {
                       onChange={handleChange}
                       placeholder="เช่น SC310001"
                       required
-                      className="w-full px-5 py-4 bg-white/80 backdrop-blur-sm border-2 border-gray-100 rounded-2xl focus:ring-4 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all duration-300 placeholder:text-gray-400"
+                      className="w-full px-5 py-4 bg-white/80  border-2 border-gray-100 rounded-2xl focus:ring-4 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all duration-300 placeholder:text-gray-400"
                     />
                   </div>
 
@@ -146,7 +146,7 @@ const AddCourse = () => {
                       onChange={handleChange}
                       placeholder="เช่น Computer Programming"
                       required
-                      className="w-full px-5 py-4 bg-white/80 backdrop-blur-sm border-2 border-gray-100 rounded-2xl focus:ring-4 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all duration-300 placeholder:text-gray-400"
+                      className="w-full px-5 py-4 bg-white/80  border-2 border-gray-100 rounded-2xl focus:ring-4 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all duration-300 placeholder:text-gray-400"
                     />
                   </div>
 
@@ -161,7 +161,7 @@ const AddCourse = () => {
                       onChange={handleChange}
                       placeholder="เช่น SC5101"
                       required
-                      className="w-full px-5 py-4 bg-white/80 backdrop-blur-sm border-2 border-gray-100 rounded-2xl focus:ring-4 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all duration-300 placeholder:text-gray-400"
+                      className="w-full px-5 py-4 bg-white/80  border-2 border-gray-100 rounded-2xl focus:ring-4 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all duration-300 placeholder:text-gray-400"
                     />
                   </div>
                 </div>
@@ -177,10 +177,10 @@ const AddCourse = () => {
                       value={formData.imageUrl}
                       onChange={handleChange}
                       placeholder="https://example.com/image.jpg"
-                      className="w-full px-5 py-4 bg-white/80 backdrop-blur-sm border-2 border-gray-100 rounded-2xl focus:ring-4 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all duration-300 placeholder:text-gray-400"
+                      className="w-full px-5 py-4 bg-white/80  border-2 border-gray-100 rounded-2xl focus:ring-4 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all duration-300 placeholder:text-gray-400"
                     />
                     {imageError && (
-                      <div className="mt-3 p-4 bg-red-50/90 backdrop-blur-sm border-2 border-red-100 rounded-2xl animate-pulse">
+                      <div className="mt-3 p-4 bg-red-50/90  border-2 border-red-100 rounded-2xl animate-pulse">
                         <div className="flex items-center text-red-700">
                           <svg className="w-5 h-5 mr-3 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -193,7 +193,7 @@ const AddCourse = () => {
 
                   <div className="mt-6">
                     <p className="text-base font-medium text-gray-700 mb-2">ตัวอย่างรูปภาพ</p>
-                    <div className="border-2 border-gray-100 rounded-2xl overflow-hidden aspect-video bg-white/80 backdrop-blur-sm group hover:border-indigo-200 transition-all duration-300">
+                    <div className="border-2 border-gray-100 rounded-2xl overflow-hidden aspect-video bg-white/80  group hover:border-indigo-200 transition-all duration-300">
                       {imagePreview ? (
                         <img
                           src={imagePreview}
@@ -211,7 +211,7 @@ const AddCourse = () => {
               </div>
 
               {error && (
-                <div className="p-4 bg-red-50/90 backdrop-blur-sm border-2 border-red-100 rounded-2xl animate-pulse">
+                <div className="p-4 bg-red-50/90  border-2 border-red-100 rounded-2xl animate-pulse">
                   <div className="flex items-center text-red-700">
                     <svg className="w-5 h-5 mr-3 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -225,7 +225,7 @@ const AddCourse = () => {
                 <button
                   type="button"
                   onClick={() => navigate('/home')}
-                  className="px-8 py-4 border-2 border-gray-200 rounded-2xl text-gray-700 hover:bg-gray-50 hover:border-gray-300 transition-all duration-300 font-medium focus:ring-4 focus:ring-gray-200/50 backdrop-blur-sm text-base"
+                  className="px-8 py-4 border-2 border-gray-200 rounded-2xl text-gray-700 hover:bg-gray-50 hover:border-gray-300 transition-all duration-300 font-medium focus:ring-4 focus:ring-gray-200/50  text-base"
                 >
                   ยกเลิก
                 </button>
