@@ -86,7 +86,7 @@ const EditProfilePage = () => {
     <div className="min-h-screen bg-gradient-to-br from-indigo-100 via-white to-purple-100">
       <div className="container mx-auto px-4 py-12 sm:px-6 lg:px-8">
         <div className="max-w-3xl mx-auto">
-          <div className="backdrop-blur-sm bg-white/80 rounded-3xl shadow-2xl overflow-hidden border border-white/50">
+          <div className=" bg-white/80 rounded-3xl shadow-2xl overflow-hidden border border-white/50">
             {/* Header with improved gradient and pattern */}
             <div className="px-8 py-8 bg-gradient-to-r from-indigo-600 to-purple-600 relative">
               <div className="absolute inset-0 bg-pattern opacity-10"></div>
@@ -130,7 +130,7 @@ const EditProfilePage = () => {
 
               {/* Alert Messages with improved styling */}
               {errorMessage && (
-                <div className="mb-8 p-4 bg-red-50/80 backdrop-blur-sm border border-red-200 rounded-2xl animate-fadeIn">
+                <div className="mb-8 p-4 bg-red-50/80  border border-red-200 rounded-2xl animate-fadeIn">
                   <div className="flex items-center text-red-700">
                     <svg className="w-5 h-5 mr-3 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -141,7 +141,7 @@ const EditProfilePage = () => {
               )}
 
               {successMessage && (
-                <div className="mb-8 p-4 bg-green-50/80 backdrop-blur-sm border border-green-200 rounded-2xl animate-fadeIn">
+                <div className="mb-8 p-4 bg-green-50/80  border border-green-200 rounded-2xl animate-fadeIn">
                   <div className="flex items-center text-green-700">
                     <svg className="w-5 h-5 mr-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
@@ -162,7 +162,7 @@ const EditProfilePage = () => {
                     id="display-name"
                     value={displayName}
                     onChange={(e) => setDisplayName(e.target.value)}
-                    className="w-full px-4 py-3.5 bg-white/50 backdrop-blur-sm border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all duration-200"
+                    className="w-full px-4 py-3.5 bg-white/50  border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all duration-200"
                   />
                 </div>
 
@@ -177,7 +177,7 @@ const EditProfilePage = () => {
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     disabled
-                    className="w-full px-4 py-3.5 bg-gray-100/80 backdrop-blur-sm border border-gray-200 rounded-xl text-gray-500 cursor-not-allowed"
+                    className="w-full px-4 py-3.5 bg-gray-100/80  border border-gray-200 rounded-xl text-gray-500 cursor-not-allowed"
                   />
                 </div>
 
@@ -192,7 +192,7 @@ const EditProfilePage = () => {
                     value={newPhotoURL}
                     onChange={(e) => setNewPhotoURL(e.target.value)}
                     placeholder="ใส่ URL รูปภาพ"
-                    className="w-full px-4 py-3.5 bg-white/50 backdrop-blur-sm border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all duration-200"
+                    className="w-full px-4 py-3.5 bg-white/50  border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all duration-200"
                   />
                 </div>
               </div>
@@ -202,7 +202,7 @@ const EditProfilePage = () => {
                 <button
                   type="button"
                   onClick={() => navigate("/home")}
-                  className="px-6 py-3 border border-gray-200 rounded-xl text-gray-700 hover:bg-gray-50 transition-all duration-200 font-medium focus:ring-2 focus:ring-gray-200 backdrop-blur-sm"
+                  className="px-6 py-3 border border-gray-200 rounded-xl text-gray-700 hover:bg-gray-50 transition-all duration-200 font-medium focus:ring-2 focus:ring-gray-200"
                 >
                   ยกเลิก
                 </button>
