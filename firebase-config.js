@@ -29,12 +29,15 @@ async function createUser(uid, name, email, photo, classroom) {
   });
 
   // สร้างข้อมูลห้องเรียนที่ผู้ใช้เข้าร่วม
-  classroom.forEach(async (cid) => {
+  const promises = classroom.map(async (cid) => {
     const classroomRef = doc(db, "users", uid, "classroom", cid);
     await setDoc(classroomRef, {
       status: 2, // สถานะเป็นนักเรียน
     });
   });
+
+  // รอให้ข้อมูลทั้งหมดถูกเพิ่มก่อนจะเสร็จสิ้น
+  await Promise.all(promises);
 }
 
 // ฟังก์ชันสร้างข้อมูล /classroom/{cid}
@@ -109,33 +112,62 @@ async function addAnswerToCheckin(cid, cno, qno, stdid, text, time) {
   });
 }
 
+
 // ฟังก์ชันสำหรับลงชื่อเข้าใช้ด้วย Google
-export const signInWithGoogle = async (navigate) => {
-  const auth = getAuth();
+// export const signInWithGoogle = async () => {
+//   const auth = getAuth();
+//   const provider = new GoogleAuthProvider();
+//   try {
+//     const userCredential = await signInWithPopup(auth, provider);
+//     return userCredential;  // คืนค่า userCredential
+//   } catch (error) {
+//     console.error('Error signing in with Google:', error);
+//     throw error;  // ส่ง error ออกไปให้ component handle
+//   }
+// }
+
+export const signInWithGoogle = async () => {
   const provider = new GoogleAuthProvider();
-
   try {
-    const result = await signInWithPopup(auth, provider);
-    const user = result.user;
-    console.log('User signed in: ', user);
+    const userCredential = await signInWithPopup(auth, provider);
+    const user = userCredential.user;
 
-    // หลังจากล็อกอินสำเร็จให้ทำการ redirect ไปยังหน้า /home
-    navigate('/home');
+    console.log("User Logged In:", user);  // ✅ ตรวจสอบค่าผู้ใช้ที่ login
+
+    if (user) {
+      const { uid, displayName, email, photoURL } = user;
+
+      console.log("Saving to Firestore:", uid, displayName, email);  // ✅ Debug จุดนี้
+
+      // บันทึกข้อมูล
+      const userRef = doc(db, "users", uid);
+      await setDoc(userRef, { uid, name: displayName, email, photoURL }, { merge: true });
+
+      console.log("Firestore Saved Successfully!");  // ✅ ตรวจสอบว่า save สำเร็จ
+
+      return userCredential;
+    }
   } catch (error) {
-    console.error("Error signing in with Google: ", error);
+    console.error('Error signing in with Google:', error);
+    throw error;
   }
 };
 
 // ฟังก์ชันสำหรับการออกจากระบบ
-export const logout = async () => {
+export const logout = async (navigate) => {
   const auth = getAuth();
   
   try {
     await signOut(auth);  // เรียกใช้ฟังก์ชัน signOut ของ Firebase
     console.log("User signed out successfully");
-    // เมื่อ logout เสร็จให้ทำการ redirect ไปยังหน้า login หรือหน้าอื่นๆ ตามที่ต้องการ
-    window.location.href = "/";  // เปลี่ยนเส้นทางไปที่หน้า login
+
+    // ลบข้อมูลผู้ใช้จาก LocalStorage
+    localStorage.removeItem('user');
+
+    // ใช้ navigate เพื่อไปหน้า login
+    navigate('/');  // เปลี่ยนเส้นทางไปที่หน้า login
   } catch (error) {
     console.error("Error signing out: ", error);
   }
 };
+
