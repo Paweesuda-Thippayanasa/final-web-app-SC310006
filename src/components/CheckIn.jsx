@@ -1,180 +1,178 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from "react";
+import { useParams, useNavigate } from "react-router-dom";
 
 const CheckIn = () => {
-  const [students, setStudents] = useState([]);
-  const [scores, setScores] = useState([]);
-  const [showStudentList, setShowStudentList] = useState(false);
-  const [showScores, setShowScores] = useState(false);
-  const [isCheckInOpen, setIsCheckInOpen] = useState(false);
-
-  const courseInfo = {
-    code: "CS101",
-    name: "Introduction to Computer Science",
-    backgroundImage: "/api/placeholder/1200/400",
-    instructor: "Dr. John Smith",
-    semester: "1/2024"
+  const { classroomId } = useParams();
+  const navigate = useNavigate();
+  
+  // Mock Data Declarations
+  const mockClassroom = {
+    info: {
+      name: "Computer Programming",
+      code: "SC310001",
+      photo: "https://via.placeholder.com/200",
+      room: "SC5101",
+    },
   };
 
-  const fetchStudents = () => {
-    const mockStudents = [
-      { id: 1, code: "6401234", name: "John Doe", note: "", timestamp: "2024-02-23 10:00" },
-      { id: 2, code: "6401235", name: "Jane Smith", note: "", timestamp: "2024-02-23 10:01" }
-    ];
-    setStudents(mockStudents);
+  const mockCheckIns = [
+    {
+      id: "checkin1",
+      code: "ABC123",
+      date: "10/02/2025 13:00",
+      status: 1, // กำลังเช็คชื่อ
+    },
+    {
+      id: "checkin2",
+      code: "XYZ456",
+      date: "17/02/2025 13:00",
+      status: 2, // เสร็จสิ้นการเช็คชื่อ
+    },
+  ];
+
+  const mockStudents = [
+    {
+      id: "student1",
+      stdid: "63010001",
+      name: "John Doe",
+      remark: "มาเรียน",
+      date: "10/02/2025 13:05",
+    },
+    {
+      id: "student2",
+      stdid: "63010002",
+      name: "Jane Smith",
+      remark: "มาสาย",
+      date: "10/02/2025 13:10",
+    },
+  ];
+
+  const mockScores = [
+    {
+      id: "student1",
+      stdid: "63010001",
+      name: "John Doe",
+      remark: "มาเรียน",
+      date: "10/02/2025 13:05",
+      score: 10,
+      status: "1", // มาเรียน
+    },
+    {
+      id: "student2",
+      stdid: "63010002",
+      name: "Jane Smith",
+      remark: "มาสาย",
+      date: "10/02/2025 13:10",
+      score: 5,
+      status: "2", // มาสาย
+    },
+  ];
+
+  // State declarations
+  const [classroom, setClassroom] = useState(mockClassroom);
+  const [checkIns, setCheckIns] = useState(mockCheckIns);
+  const [students, setStudents] = useState(mockStudents);
+  const [scores, setScores] = useState(mockScores);
+  const [currentCheckIn, setCurrentCheckIn] = useState("checkin1");
+
+  const deleteStudent = (studentId) => {
+    setStudents(students.filter((student) => student.id !== studentId));
   };
 
-  const fetchScores = () => {
-    const mockScores = [
-      { id: 1, code: "6401234", name: "John Doe", note: "", timestamp: "2024-02-23 10:00", score: 10, status: 1 },
-      { id: 2, code: "6401235", name: "Jane Smith", note: "", timestamp: "2024-02-23 10:01", score: 10, status: 1 }
-    ];
-    setScores(mockScores);
+  const handleBack = () => {
+    navigate(`/manage-classroom/${classroomId}`);
   };
 
-  useEffect(() => {
-    if (showStudentList) fetchStudents();
-    if (showScores) fetchScores();
-  }, [showStudentList, showScores]);
-
-  const handleDeleteStudent = (studentId) => {
-    setStudents(students.filter(student => student.id !== studentId));
-  };
-
-  const handleSaveCheckin = () => {
-    console.log("Saving check-in data...");
-  };
-
-  const handleScoreChange = (id, field, value) => {
-    setScores(scores.map(score => 
-      score.id === id ? { ...score, [field]: value } : score
-    ));
-  };
-
-  const handleSaveScores = () => {
-    console.log("Saving scores...", scores);
+  const handleCreateQuestion = () => {
+    navigate(`/checkin/${classroomId}/question`);
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Course Header */}
-      <div className="relative h-64 mb-16 overflow-hidden">
-        <img 
-          src={courseInfo.backgroundImage} 
-          alt="Course background" 
-          className="w-full h-full object-cover brightness-75"
-        />
-        <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent"></div>
-        <div className="absolute bottom-0 left-0 right-0 p-8 text-white">
-          <div className="max-w-6xl mx-auto">
-            <h1 className="text-4xl font-bold mb-2">{courseInfo.code}</h1>
-            <h2 className="text-2xl mb-2">{courseInfo.name}</h2>
-            <div className="flex items-center gap-4 text-sm">
-              <span>{courseInfo.instructor}</span>
-              <span>•</span>
-              <span>ภาคการศึกษา {courseInfo.semester}</span>
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 py-8">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        {/* Back Button */}
+        <button
+          onClick={handleBack}
+          className="group flex items-center space-x-2 px-4 py-2 rounded-lg text-gray-600 hover:text-gray-900 hover:bg-white transition duration-200 mb-6"
+        >
+          <svg
+            className="w-5 h-5 transform group-hover:-translate-x-1 transition duration-200"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth="2"
+              d="M10 19l-7-7m0 0l7-7m-7 7h18"
+            />
+          </svg>
+          <span className="font-medium">กลับสู่หน้าจัดการห้องเรียน</span>
+        </button>
+
+        {/* Header Section */}
+        <div className="relative overflow-hidden bg-gradient-to-r from-blue-600 via-blue-500 to-indigo-600 rounded-2xl shadow-lg mb-8">
+          <div className="relative z-10 p-8">
+            <h1 className="text-4xl font-bold text-white mb-4">{classroom.info.name}</h1>
+            <div className="space-y-2 text-white/90">
+              <p className="text-lg">รหัสวิชา: {classroom.info.code}</p>
+              <p className="text-lg">ห้องเรียน: {classroom.info.room}</p>
             </div>
           </div>
-        </div>
-      </div>
-
-      <div className="max-w-6xl mx-auto px-4">
-        {/* Status Card */}
-        <div className="bg-white rounded-xl shadow-sm mb-8 p-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <h3 className="text-lg font-semibold mb-1">สถานะการเช็คชื่อ</h3>
-              <p className={`text-sm ${isCheckInOpen ? 'text-green-600' : 'text-red-600'}`}>
-                {isCheckInOpen ? '🟢 กำลังเปิดรับการเช็คชื่อ' : '🔴 ปิดการเช็คชื่อ'}
-              </p>
-            </div>
-            <button 
-              className={`
-                px-6 py-2 rounded-lg font-medium transition-all
-                ${isCheckInOpen 
-                  ? 'bg-red-100 text-red-700 hover:bg-red-200' 
-                  : 'bg-green-100 text-green-700 hover:bg-green-200'
-                }
-              `}
-              onClick={() => setIsCheckInOpen(!isCheckInOpen)}
-            >
-              {isCheckInOpen ? 'ปิดเช็คชื่อ' : 'เปิดเช็คชื่อ'}
-            </button>
+          <div className="absolute top-0 right-0 -mt-20 -mr-20">
+            <div className="w-40 h-40 bg-white/10 rounded-full blur-2xl"></div>
           </div>
         </div>
 
         {/* Action Buttons */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-          <button className="bg-blue-600 hover:bg-blue-700 text-white p-4 rounded-lg shadow-sm transition-all">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+          <button className="px-6 py-3 bg-blue-500 text-white rounded-xl font-medium shadow-lg shadow-blue-500/20 hover:bg-blue-600 transition duration-200 transform hover:scale-105">
+            เปิดเช็คชื่อ
+          </button>
+          <button className="px-6 py-3 bg-red-500 text-white rounded-xl font-medium shadow-lg shadow-red-500/20 hover:bg-red-600 transition duration-200 transform hover:scale-105">
+            ปิดเช็คชื่อ
+          </button>
+          <button className="px-6 py-3 bg-green-500 text-white rounded-xl font-medium shadow-lg shadow-green-500/20 hover:bg-green-600 transition duration-200 transform hover:scale-105">
             บันทึกการเช็คชื่อ
           </button>
-          <button className="bg-purple-600 hover:bg-purple-700 text-white p-4 rounded-lg shadow-sm transition-all">
-            แสดงรหัสเช็คชื่อ
-          </button>
-          <button className="bg-indigo-600 hover:bg-indigo-700 text-white p-4 rounded-lg shadow-sm transition-all">
-            แสดง QR Code
-          </button>
-          <button className="bg-yellow-600 hover:bg-yellow-700 text-white p-4 rounded-lg shadow-sm transition-all">
-            ถาม-ตอบ
-          </button>
-          <button 
-            className={`
-              p-4 rounded-lg shadow-sm transition-all
-              ${showStudentList 
-                ? 'bg-gray-800 text-white' 
-                : 'bg-gray-100 text-gray-800 hover:bg-gray-200'
-              }
-            `}
-            onClick={() => {
-              setShowStudentList(!showStudentList);
-              setShowScores(false);
-            }}
+          <button
+            onClick={handleCreateQuestion}
+            className="px-6 py-3 bg-purple-500 text-white rounded-xl font-medium shadow-lg shadow-purple-500/20 hover:bg-purple-600 transition duration-200 transform hover:scale-105"
           >
-            แสดงรายชื่อ
-          </button>
-          <button 
-            className={`
-              p-4 rounded-lg shadow-sm transition-all
-              ${showScores 
-                ? 'bg-gray-800 text-white' 
-                : 'bg-gray-100 text-gray-800 hover:bg-gray-200'
-              }
-            `}
-            onClick={() => {
-              setShowScores(!showScores);
-              setShowStudentList(false);
-            }}
-          >
-            แสดงคะแนน
+            สร้างคำถาม
           </button>
         </div>
 
-        {/* Student List Table */}
-        {showStudentList && (
-          <div className="bg-white rounded-xl shadow-sm p-6 mb-8 overflow-x-auto">
-            <h3 className="text-lg font-semibold mb-4">รายชื่อนักศึกษาที่เช็คชื่อ</h3>
+        {/* Check-in List */}
+        <div className="bg-white rounded-2xl shadow-lg overflow-hidden mb-8">
+          <div className="p-6 border-b border-gray-100">
+            <h2 className="text-2xl font-bold text-gray-800">รายชื่อผู้ที่เช็คชื่อ</h2>
+          </div>
+          <div className="overflow-x-auto">
             <table className="w-full">
               <thead>
                 <tr className="bg-gray-50">
-                  <th className="px-4 py-3 text-left">ลำดับ</th>
-                  <th className="px-4 py-3 text-left">รหัส</th>
-                  <th className="px-4 py-3 text-left">ชื่อ</th>
-                  <th className="px-4 py-3 text-left">หมายเหตุ</th>
-                  <th className="px-4 py-3 text-left">วันเวลา</th>
-                  <th className="px-4 py-3 text-left">การจัดการ</th>
+                  <th className="px-6 py-4 text-left text-sm font-semibold text-gray-600">ลำดับ</th>
+                  <th className="px-6 py-4 text-left text-sm font-semibold text-gray-600">รหัส</th>
+                  <th className="px-6 py-4 text-left text-sm font-semibold text-gray-600">ชื่อ</th>
+                  <th className="px-6 py-4 text-left text-sm font-semibold text-gray-600">หมายเหตุ</th>
+                  <th className="px-6 py-4 text-left text-sm font-semibold text-gray-600">วันเวลา</th>
+                  <th className="px-6 py-4 text-left text-sm font-semibold text-gray-600">จัดการ</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-100">
                 {students.map((student, index) => (
-                  <tr key={student.id} className="hover:bg-gray-50">
-                    <td className="px-4 py-3">{index + 1}</td>
-                    <td className="px-4 py-3 font-medium">{student.code}</td>
-                    <td className="px-4 py-3">{student.name}</td>
-                    <td className="px-4 py-3">{student.note}</td>
-                    <td className="px-4 py-3 text-gray-600">{student.timestamp}</td>
-                    <td className="px-4 py-3">
-                      <button 
-                        className="bg-red-100 text-red-700 hover:bg-red-200 px-3 py-1 rounded-lg transition-all"
-                        onClick={() => handleDeleteStudent(student.id)}
+                  <tr key={student.id} className="hover:bg-gray-50/50 transition duration-150">
+                    <td className="px-6 py-4 text-gray-600">{index + 1}</td>
+                    <td className="px-6 py-4 font-medium text-gray-900">{student.stdid}</td>
+                    <td className="px-6 py-4 text-gray-800">{student.name}</td>
+                    <td className="px-6 py-4 text-gray-600">{student.remark}</td>
+                    <td className="px-6 py-4 text-gray-600">{student.date}</td>
+                    <td className="px-6 py-4">
+                      <button
+                        onClick={() => deleteStudent(student.id)}
+                        className="text-red-500 hover:text-red-700 font-medium transition-colors"
                       >
                         ลบ
                       </button>
@@ -184,74 +182,75 @@ const CheckIn = () => {
               </tbody>
             </table>
           </div>
-        )}
+        </div>
 
-        {/* Scores Table */}
-        {showScores && (
-          <div className="bg-white rounded-xl shadow-sm p-6 mb-8">
-            <div className="flex justify-between items-center mb-4">
-              <h3 className="text-lg font-semibold">คะแนนการเข้าเรียน</h3>
-              <button 
-                className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg transition-all"
-                onClick={handleSaveScores}
-              >
-                บันทึกข้อมูล
-              </button>
-            </div>
-            <div className="overflow-x-auto">
-              <table className="w-full">
-                <thead>
-                  <tr className="bg-gray-50">
-                    <th className="px-4 py-3 text-left">ลำดับ</th>
-                    <th className="px-4 py-3 text-left">รหัส</th>
-                    <th className="px-4 py-3 text-left">ชื่อ</th>
-                    <th className="px-4 py-3 text-left">หมายเหตุ</th>
-                    <th className="px-4 py-3 text-left">วันเวลา</th>
-                    <th className="px-4 py-3 text-left">คะแนน</th>
-                    <th className="px-4 py-3 text-left">สถานะ</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-gray-100">
-                  {scores.map((score, index) => (
-                    <tr key={score.id} className="hover:bg-gray-50">
-                      <td className="px-4 py-3">{index + 1}</td>
-                      <td className="px-4 py-3 font-medium">{score.code}</td>
-                      <td className="px-4 py-3">{score.name}</td>
-                      <td className="px-4 py-3">
-                        <input
-                          type="text"
-                          value={score.note}
-                          onChange={(e) => handleScoreChange(score.id, 'note', e.target.value)}
-                          className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
-                        />
-                      </td>
-                      <td className="px-4 py-3 text-gray-600">{score.timestamp}</td>
-                      <td className="px-4 py-3">
-                        <input
-                          type="number"
-                          value={score.score}
-                          onChange={(e) => handleScoreChange(score.id, 'score', e.target.value)}
-                          className="w-24 p-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
-                        />
-                      </td>
-                      <td className="px-4 py-3">
-                        <select
-                          value={score.status}
-                          onChange={(e) => handleScoreChange(score.id, 'status', e.target.value)}
-                          className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
-                        >
-                          <option value="1">เข้าเรียน</option>
-                          <option value="0">ขาดเรียน</option>
-                          <option value="2">ลา</option>
-                        </select>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+        {/* Scores Section */}
+        <div className="bg-white rounded-2xl shadow-lg overflow-hidden">
+          <div className="p-6 border-b border-gray-100">
+            <h2 className="text-2xl font-bold text-gray-800">คะแนนการเข้าเรียน</h2>
           </div>
-        )}
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead>
+                <tr className="bg-gray-50">
+                  <th className="px-6 py-4 text-left text-sm font-semibold text-gray-600">ลำดับ</th>
+                  <th className="px-6 py-4 text-left text-sm font-semibold text-gray-600">รหัส</th>
+                  <th className="px-6 py-4 text-left text-sm font-semibold text-gray-600">ชื่อ</th>
+                  <th className="px-6 py-4 text-left text-sm font-semibold text-gray-600">หมายเหตุ</th>
+                  <th className="px-6 py-4 text-left text-sm font-semibold text-gray-600">วันเวลา</th>
+                  <th className="px-6 py-4 text-left text-sm font-semibold text-gray-600">คะแนน</th>
+                  <th className="px-6 py-4 text-left text-sm font-semibold text-gray-600">สถานะ</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-100">
+                {scores.map((score, index) => (
+                  <tr key={score.id} className="hover:bg-gray-50/50 transition duration-150">
+                    <td className="px-6 py-4 text-gray-600">{index + 1}</td>
+                    <td className="px-6 py-4 font-medium text-gray-900">{score.stdid}</td>
+                    <td className="px-6 py-4 text-gray-800">{score.name}</td>
+                    <td className="px-6 py-4 text-gray-600">{score.remark}</td>
+                    <td className="px-6 py-4 text-gray-600">{score.date}</td>
+                    <td className="px-6 py-4">
+                      <input
+                        type="text"
+                        value={score.score}
+                        onChange={(e) => {
+                          const newScores = [...scores];
+                          newScores[index].score = e.target.value;
+                          setScores(newScores);
+                        }}
+                        className="w-16 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      />
+                    </td>
+                    <td className="px-6 py-4">
+                      <select
+                        value={score.status}
+                        onChange={(e) => {
+                          const newScores = [...scores];
+                          newScores[index].status = e.target.value;
+                          setScores(newScores);
+                        }}
+                        className="px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      >
+                        <option value="0">ไม่มา</option>
+                        <option value="1">มาเรียน</option>
+                        <option value="2">มาสาย</option>
+                      </select>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+          <div className="p-6 border-t border-gray-100">
+            <button
+              onClick={() => alert("บันทึกคะแนนเรียบร้อย")}
+              className="px-6 py-3 bg-green-500 text-white rounded-xl font-medium shadow-lg shadow-green-500/20 hover:bg-green-600 transition duration-200 transform hover:scale-105"
+            >
+              บันทึกคะแนน
+            </button>
+          </div>
+        </div>
       </div>
     </div>
   );
