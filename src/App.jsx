@@ -7,6 +7,7 @@ import EditProfilePage from "./components/EditProfilePage";
 import AddCourse from "./components/AddCourse";
 import ManageClassroom from "./components/ManageClassroom";
 import Question from "./components/Question";
+import CheckIn from "./components/CheckIn";
 
 function App() {
 
@@ -19,6 +20,8 @@ function App() {
 				<Route path="/add-course" element={<AddCourse/>} />
 				<Route path="/manage-classroom/:id" element={<ManageClassroom />} /> 
 				<Route path="/question" element={<Question />} /> 
+				<Route path="/checkin/:classroomId" element={<CheckIn/>} /> 
+	
 			</Routes>
 		</div>
 	);
