@@ -87,8 +87,7 @@ const Question = () => {
 				console.error("เกิดข้อผิดพลาด: ", error);
 			});
         
-            //reload page
-            window.location.reload();
+       
 	};
 
 	// เริ่มถามคำถามทั้งหมด
