@@ -251,10 +251,10 @@ const ManageClassroom = () => {
 										QR Code สำหรับลงทะเบียน
 									</h3>
 									<p className="text-xl font-semibold text-gray-800">
-										Software Engineering
+                  {classroom.info?.name}
 									</p>
 									<p className="text-lg text-gray-700 font-medium">
-										รหัสวิชา: CP3003001
+                  รหัสวิชา: {classroom.info?.code}
 									</p>
 								</div>
 								<button
@@ -286,6 +286,7 @@ const ManageClassroom = () => {
 						</div>
 					</div>
 				)}
+        
 				{/* Students List */}
 				<div className="bg-white rounded-2xl shadow-lg overflow-hidden">
 					<div className="p-6 border-b border-gray-100">
