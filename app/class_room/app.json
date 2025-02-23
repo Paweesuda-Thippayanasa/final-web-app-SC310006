@@ -14,6 +14,7 @@
     "extra": {
       "API_KEY": "AIzaSyDk7mEkayeHxrKerk0hOOCsxmztdYh9uck",
       "AUTH_DOMAIN": "final-web-app-5880c.firebaseapp.com",
+      "DATABASE_URL": "https://final-web-app-5880c-default-rtdb.asia-southeast1.firebasedatabase.app",
       "PROJECT_ID": "final-web-app-5880c",
       "STORAGE_BUCKET": "final-web-app-5880c.firebasestorage.app",
       "MESSAGING_SENDER_ID": "725331159486",

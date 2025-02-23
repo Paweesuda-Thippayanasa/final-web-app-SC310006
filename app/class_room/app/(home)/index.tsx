@@ -12,16 +12,14 @@ import {
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useRouter } from "expo-router";
 import { signOut } from "firebase/auth";
-import { auth } from "../../services/firebase";
-import { 
-  GraduationCap, 
-  PlusCircle, 
-  Calculator,
-  BookOpen,
-  Clock,
-  UsersRound,
-  Binary,
-  MessagesSquare
+import { auth, dbRealtime } from "../../services/firebase"; // Import Realtime Database instance
+import { ref, get, child } from "firebase/database"; // Realtime Database methods
+import { db } from "../../services/firebase"; // Assuming dbFirestore is your Firestore instance
+import { doc, getDoc } from "firebase/firestore"; // Firestore methods
+import {
+  GraduationCap,
+  PlusCircle,
+  BookOpen
 } from "lucide-react-native";
 
 const HomeScreen = () => {
@@ -29,6 +27,7 @@ const HomeScreen = () => {
   const { width } = useWindowDimensions();
   const [user, setUser] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const [enrolledCourses, setEnrolledCourses] = useState<any[]>([]);
 
   useEffect(() => {
     const fetchUser = async () => {
@@ -39,7 +38,56 @@ const HomeScreen = () => {
       setLoading(false);
     };
 
+    const fetchEnrolledCourses = async () => {
+      const user = auth.currentUser;
+      if (user) {
+        const coursesRef = ref(dbRealtime, `users/${user.uid}/classroom`);
+        try {
+          const snapshot = await get(coursesRef);
+          if (snapshot.exists()) {
+            // Convert the snapshot to an array of courses
+            const coursesData = Object.entries(snapshot.val()).map(([key, value]) => ({
+              cid: key, // Use the key as the course ID
+              ...(value as any), // Include other fields (e.g., status)
+            })).filter((course: any) => course.status === 2); // Filter courses by status: 2 (enrolled)
+    
+            // Log coursesData from Realtime Database
+            console.log("Courses Data from Realtime DB:", coursesData);
+    
+            // Fetch course names from Firestore for each course
+            const coursesWithNames = await Promise.all(coursesData.map(async (course: any) => {
+              const courseRef = doc(db, `classroom/${course.cid}`);
+              const courseSnapshot = await getDoc(courseRef);
+    
+              // Log Firestore document ID and snapshot
+              console.log("Firestore Document ID:", course.cid);
+              console.log("Firestore Snapshot:", courseSnapshot.exists() ? courseSnapshot.data() : "Document does not exist");
+    
+              // Check if course exists in Firestore and fetch the name from the 'info' field
+              const courseName = courseSnapshot.exists()
+                ? courseSnapshot.data().info?.name || "Unknown Course"
+                : "Unknown Course";
+    
+              // Return the updated course data including the course name from Firestore
+              return { ...course, courseName };
+            }));
+    
+            // Log the final coursesWithNames
+            console.log("Courses with Names:", coursesWithNames);
+    
+            setEnrolledCourses(coursesWithNames);
+          } else {
+            console.log("No enrolled courses found in Realtime DB.");
+          }
+        } catch (error) {
+          console.error("Error fetching courses: ", error);
+        }
+      }
+    };
+
+
     fetchUser();
+    fetchEnrolledCourses();
   }, []);
 
   const handleLogout = async () => {
@@ -83,23 +131,20 @@ const HomeScreen = () => {
         <Text style={styles.headerText}>วิชาเรียน</Text>
       </View>
 
-      {/* Grid Navigation */}
+      {/* Grid Navigation - Display Enrolled Courses */}
       <View style={[styles.gridContainer, isLargeScreen && styles.gridContainerLarge]}>
-        {[ 
-          { icon: Calculator, color: '#0369a1', bg: '#bae6fd', text: 'คณิตศาสตร์' },
-          { icon: BookOpen, color: '#15803d', bg: '#bbf7d0', text: 'ภาษาไทย' },
-          { icon: Clock, color: '#b45309', bg: '#fde68a', text: 'ประวัติศาสตร์' },
-          { icon: UsersRound, color: '#6d28d9', bg: '#ddd6fe', text: 'สังคมศึกษา' },
-          { icon: Binary, color: '#c2410c', bg: '#fed7aa', text: 'วิทยาศาสตร์' },
-          { icon: MessagesSquare, color: '#1d4ed8', bg: '#bfdbfe', text: 'ภาษาอังกฤษ' },
-        ].map((item, index) => (
-          <TouchableOpacity key={index} style={[styles.gridItem, isLargeScreen && styles.gridItemLarge]}>
-            <View style={[styles.iconCircle, { backgroundColor: item.bg }]}> 
-              <item.icon size={24} color={item.color} />
-            </View>
-            <Text style={styles.gridText}>{item.text}</Text>
-          </TouchableOpacity>
-        ))}
+        {enrolledCourses.length > 0 ? (
+          enrolledCourses.map((course, index) => (
+            <TouchableOpacity key={index} style={[styles.gridItem, isLargeScreen && styles.gridItemLarge]}    onPress={() => {router.navigate(`/(attendance)/classroom/${course.cid}`);}}>
+              <View style={[styles.iconCircle, { backgroundColor: '#bbf7d0' }]}>
+                <BookOpen size={24} color="#15803d" />
+              </View>
+              <Text style={styles.gridText}>{course.courseName}</Text> {/* Display course name */}
+            </TouchableOpacity>
+          ))
+        ) : (
+          <Text style={styles.noCoursesText}>No courses enrolled yet.</Text>
+        )}
       </View>
 
       {/* Add Subject Button */}
@@ -209,6 +254,13 @@ const styles = StyleSheet.create({
     fontWeight: "600",
     marginLeft: 8,
   },
+  noCoursesText: {
+    fontSize: 16,
+    fontWeight: "500",
+    color: "#1e3a8a",
+    textAlign: "center",
+    marginTop: 16,
+  }
 });
 
 export default HomeScreen;
