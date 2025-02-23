@@ -176,11 +176,20 @@ const ManageClassroom = () => {
 	};
 
 	if (loading) {
-		return <div>Loading...</div>;
+		return (
+			<div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 flex items-center justify-center">
+				<div className="p-8 bg-white rounded-xl shadow-xl">
+					<div className="w-16 h-16 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto"></div>
+					<p className="mt-4 text-gray-600 font-medium text-center">
+						กำลังโหลดข้อมูล
+					</p>
+				</div>
+			</div>
+		);
 	}
 
 	if (!classroom) {
-		return <div>ไม่พบข้อมูลห้องเรียน</div>;
+		return <div>...</div>;
 	}
 
 	return (
@@ -235,17 +244,25 @@ const ManageClassroom = () => {
 				{/* Fixed QR Code Modal */}
 				{showQR && (
 					<div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50">
-						<div className="bg-white rounded-2xl p-6 shadow-2xl max-w-md w-full mx-4">
-							<div className="flex justify-between items-center mb-4">
-								<h3 className="text-xl font-bold text-gray-800">
-									QR Code สำหรับลงทะเบียน
-								</h3>
+						<div className="bg-white rounded-3xl p-8 shadow-2xl max-w-md w-full mx-4">
+							<div className="flex justify-between items-start mb-6">
+								<div className="space-y-2">
+									<h3 className="text-2xl font-bold text-gray-800">
+										QR Code สำหรับลงทะเบียน
+									</h3>
+									<p className="text-xl font-semibold text-gray-800">
+										Software Engineering
+									</p>
+									<p className="text-lg text-gray-700 font-medium">
+										รหัสวิชา: CP3003001
+									</p>
+								</div>
 								<button
 									onClick={() => setShowQR(false)}
-									className="p-2 hover:bg-gray-100 rounded-full transition duration-200"
+									className="p-2 hover:bg-gray-100 rounded-full transition-colors duration-200"
 								>
 									<svg
-										className="w-6 h-6 text-gray-500"
+										className="w-6 h-6 text-gray-400 hover:text-gray-600"
 										fill="none"
 										stroke="currentColor"
 										viewBox="0 0 24 24"
@@ -261,12 +278,14 @@ const ManageClassroom = () => {
 							</div>
 							<div
 								ref={qrCanvasRef}
-								className="bg-gray-50 p-6 rounded-xl flex justify-center items-center min-h-[300px]"
+								className="bg-gradient-to-br from-gray-50 to-gray-100 p-8 rounded-2xl flex justify-center items-center min-h-[320px] shadow-inner"
 							/>
+							<p className="text-center text-gray-500 text-sm mt-4">
+								สแกน QR Code เพื่อเข้าร่วมห้องเรียน
+							</p>
 						</div>
 					</div>
 				)}
-
 				{/* Students List */}
 				<div className="bg-white rounded-2xl shadow-lg overflow-hidden">
 					<div className="p-6 border-b border-gray-100">
