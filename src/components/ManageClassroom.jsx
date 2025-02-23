@@ -12,6 +12,8 @@ import {
 	writeBatch,
 	arrayUnion,
 } from "firebase/firestore";
+import { getDatabase, ref, onValue, off } from "firebase/database";
+import { database } from "../../firebase-config";
 import QRCode from "qrcode";
 
 const ManageClassroom = () => {
@@ -23,7 +25,44 @@ const ManageClassroom = () => {
 	const [checkins, setCheckins] = useState([]);
 	const [loading, setLoading] = useState(true);
 	const [showQR, setShowQR] = useState(false);
+	const [selectedDate, setSelectedDate] = useState(
+		new Date().toISOString().split("T")[0]
+	); // Default to current date
 	const qrCanvasRef = useRef(null);
+	useEffect(() => {
+		const db = getDatabase();
+		const studentsRef = ref(db, `classroom/${id}/students`);
+
+		// สร้าง listener สำหรับดึงข้อมูลนักเรียน
+		const listener = onValue(studentsRef, (snapshot) => {
+			console.log("🔥 Student Data from Firebase:", snapshot.val());
+
+			if (snapshot.exists()) {
+				const data = snapshot.val();
+				const studentsList = Object.entries(data).map(([key, value]) => ({
+					id: key, // Firebase Key
+					name: value.name, // ชื่อนักเรียน
+					stdid: value.stdid, // รหัสนักเรียน
+				}));
+				console.log("📌 Students List:", studentsList);
+				if (studentsList.length !== students.length) {
+					// ตรวจสอบว่า state จะไม่ถูกอัปเดตซ้ำ
+					setStudents(studentsList); // อัปเดต state
+				}
+			} else {
+				console.log("❌ No student data found!");
+				setStudents([]); // หากไม่มีข้อมูล ให้ตั้งค่าเป็น array ว่าง
+			}
+			setLoading(false); // หยุด loading
+		});
+
+		// Cleanup function เพื่อยกเลิก listener เมื่อ Component ถูก Unmount
+		return () => {
+			off(studentsRef, listener); // ยกเลิก listener
+		};
+	}, [id, students.length]); // เพิ่ม `students.length` เพื่อไม่ให้เกิดการอัปเดตซ้ำ
+
+	// Cleanup function เพื่อยกเลิก listener เมื่อ Component ถูก Unmount
 
 	useEffect(() => {
 		const fetchData = async () => {
@@ -58,6 +97,17 @@ const ManageClassroom = () => {
 
 		fetchData();
 	}, [id, db]);
+
+	// Filter checkins based on selected date
+	const filteredCheckins = selectedDate
+		? checkins.filter((checkin) => {
+				const checkinDate = new Date(checkin.date).toLocaleDateString("th-TH");
+				const selectedDateFormatted = new Date(selectedDate).toLocaleDateString(
+					"th-TH"
+				);
+				return checkinDate === selectedDateFormatted;
+		  })
+		: checkins;
 
 	const generateQRCode = async () => {
 		if (qrCanvasRef.current) {
@@ -126,44 +176,11 @@ const ManageClassroom = () => {
 	};
 
 	if (loading) {
-		return (
-			<div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 flex items-center justify-center">
-				<div className="p-8 bg-white rounded-xl shadow-xl">
-					<div className="w-16 h-16 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto"></div>
-					<p className="mt-4 text-gray-600 font-medium text-center">
-						กำลังโหลดข้อมูล...
-					</p>
-				</div>
-			</div>
-		);
+		return <div>Loading...</div>;
 	}
 
 	if (!classroom) {
-		return (
-			<div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 flex items-center justify-center">
-				<div className="p-8 bg-white rounded-xl shadow-xl text-center max-w-md mx-4">
-					<div className="w-20 h-20 bg-red-50 rounded-full flex items-center justify-center mx-auto mb-4">
-						<svg
-							className="w-10 h-10 text-red-500"
-							fill="none"
-							viewBox="0 0 24 24"
-							stroke="currentColor"
-						>
-							<path
-								strokeLinecap="round"
-								strokeLinejoin="round"
-								strokeWidth="2"
-								d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
-							/>
-						</svg>
-					</div>
-					<h2 className="text-2xl font-bold text-gray-800 mb-2">
-						ไม่พบข้อมูลห้องเรียน
-					</h2>
-					<p className="text-gray-600">กรุณาตรวจสอบข้อมูลและลองใหม่อีกครั้ง</p>
-				</div>
-			</div>
-		);
+		return <div>ไม่พบข้อมูลห้องเรียน</div>;
 	}
 
 	return (
@@ -250,74 +267,59 @@ const ManageClassroom = () => {
 					</div>
 				)}
 
-				{/* Content Grid */}
-				<div className="grid gap-8">
-					{/* Students List */}
-					<div className="bg-white rounded-2xl shadow-lg overflow-hidden">
-						<div className="p-6 border-b border-gray-100">
-							<h2 className="text-2xl font-bold text-gray-800">
-								รายชื่อนักเรียนที่ลงทะเบียน
-							</h2>
-						</div>
-						<div className="overflow-x-auto">
-							<table className="w-full">
-								<thead>
-									<tr className="bg-gray-50">
-										<th className="px-6 py-4 text-left text-sm font-semibold text-gray-600">
-											ลำดับ
-										</th>
-										<th className="px-6 py-4 text-left text-sm font-semibold text-gray-600">
-											รหัส
-										</th>
-										<th className="px-6 py-4 text-left text-sm font-semibold text-gray-600">
-											ชื่อ
-										</th>
-										<th className="px-6 py-4 text-left text-sm font-semibold text-gray-600">
-											รูปภาพ
-										</th>
-										<th className="px-6 py-4 text-left text-sm font-semibold text-gray-600">
-											สถานะ
-										</th>
+				{/* Students List */}
+				<div className="bg-white rounded-2xl shadow-lg overflow-hidden">
+					<div className="p-6 border-b border-gray-100">
+						<h2 className="text-2xl font-bold text-gray-800">
+							รายชื่อนักเรียนที่ลงทะเบียน
+						</h2>
+					</div>
+					<div className="overflow-x-auto">
+						<table className="w-full">
+							<thead>
+								<tr className="bg-gray-50">
+									<th className="px-6 py-4 text-left text-sm font-semibold text-gray-600">
+										ลำดับ
+									</th>
+									<th className="px-6 py-4 text-left text-sm font-semibold text-gray-600">
+										รหัสนักเรียน
+									</th>
+									<th className="px-6 py-4 text-left text-sm font-semibold text-gray-600">
+										ชื่อนักเรียน
+									</th>
+								</tr>
+							</thead>
+							<tbody className="divide-y divide-gray-100">
+								{loading ? ( // ใช้เงื่อนไขการโหลด
+									<tr>
+										<td colSpan="3" className="text-center py-4 text-gray-600">
+											กำลังโหลดข้อมูล...
+										</td>
 									</tr>
-								</thead>
-								<tbody className="divide-y divide-gray-100">
-									{students.map((student, index) => (
+								) : students.length > 0 ? (
+									students.map((student, index) => (
 										<tr
 											key={student.id}
 											className="hover:bg-gray-50/50 transition duration-150"
 										>
 											<td className="px-6 py-4 text-gray-600">{index + 1}</td>
 											<td className="px-6 py-4 font-medium text-gray-900">
-												{student.code}
+												{student.stdid}
 											</td>
 											<td className="px-6 py-4 text-gray-800">
 												{student.name}
 											</td>
-											<td className="px-6 py-4">
-												<img
-													src={student.imageUrl || "/api/placeholder/40/40"}
-													alt={student.name}
-													className="w-10 h-10 rounded-full ring-2 ring-gray-100"
-												/>
-											</td>
-											<td className="px-6 py-4">
-												<span
-													className={`inline-flex px-3 py-1 rounded-full text-sm font-medium ${
-														student.status === 1
-															? "bg-green-50 text-green-700 ring-1 ring-green-600/20"
-															: "bg-gray-50 text-gray-600 ring-1 ring-gray-500/20"
-													}`}
-												>
-													{student.status === 1
-														? "เช็คชื่อแล้ว"
-														: "ยังไม่ได้เช็คชื่อ"}
-												</span>
-											</td>
 										</tr>
-									))}
-								</tbody>
-							</table>
-						</div>
+									))
+								) : (
+									<tr>
+										<td colSpan="3" className="text-center py-4 text-gray-600">
+											ไม่พบข้อมูลนักเรียน
+										</td>
+									</tr>
+								)}
+							</tbody>
+						</table>
 					</div>
 
 					{/* Checkin History */}
@@ -326,12 +328,20 @@ const ManageClassroom = () => {
 							<h2 className="text-2xl font-bold text-gray-800">
 								ประวัติการเช็คชื่อ
 							</h2>
-							<button
-								onClick={addCheckin}
-								className="px-6 py-3 bg-blue-500 text-white rounded-xl font-medium shadow-lg shadow-blue-500/20 hover:bg-blue-600 transition duration-200 transform hover:scale-105"
-							>
-								เพิ่มการเช็คชื่อ
-							</button>
+							<div className="flex items-center space-x-4">
+								<input
+									type="date"
+									value={selectedDate}
+									onChange={(e) => setSelectedDate(e.target.value)}
+									className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+								/>
+								<button
+									onClick={() => navigate(`/checkin/${id}`)} // Route to checkin management
+									className="px-6 py-3 bg-blue-500 text-white rounded-xl font-medium shadow-lg shadow-blue-500/20 hover:bg-blue-600 transition duration-200 transform hover:scale-105"
+								>
+									เพิ่มการเช็คชื่อ
+								</button>
+							</div>
 						</div>
 						<div className="overflow-x-auto">
 							<table className="w-full">
@@ -355,7 +365,7 @@ const ManageClassroom = () => {
 									</tr>
 								</thead>
 								<tbody className="divide-y divide-gray-100">
-									{checkins.map((checkin, index) => (
+									{filteredCheckins.map((checkin, index) => (
 										<tr
 											key={checkin.id}
 											className="hover:bg-gray-50/50 transition duration-150"
