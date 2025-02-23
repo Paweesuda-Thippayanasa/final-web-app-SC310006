@@ -11,6 +11,15 @@
     "ios": {
       "supportsTablet": true
     },
+    "extra": {
+      "API_KEY": "AIzaSyDk7mEkayeHxrKerk0hOOCsxmztdYh9uck",
+      "AUTH_DOMAIN": "final-web-app-5880c.firebaseapp.com",
+      "PROJECT_ID": "final-web-app-5880c",
+      "STORAGE_BUCKET": "final-web-app-5880c.firebasestorage.app",
+      "MESSAGING_SENDER_ID": "725331159486",
+      "APP_ID": "1:725331159486:web:3ac104befd96704203b1ef",
+      "MEASUREMENT_ID": "G-P0380Q8BWN"
+    },
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/adaptive-icon.png",

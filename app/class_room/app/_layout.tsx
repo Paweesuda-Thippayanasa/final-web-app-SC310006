@@ -14,7 +14,7 @@ SplashScreen.preventAutoHideAsync();
 export default function RootLayout() {
   const colorScheme = useColorScheme();
   const [loaded] = useFonts({
-    Sarabun: require('../assets/fonts/Sarabun-Regular.ttf'),
+    SpaceMono: require('../assets/fonts/SpaceMono-Regular.ttf'),
   });
 
   useEffect(() => {
@@ -27,10 +27,16 @@ export default function RootLayout() {
     return null;
   }
 
+  const fixedTheme = DefaultTheme;
+
   return (
-    <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme} >
-      <Stack screenOptions={{ headerShown: false }} />
-      <StatusBar />
+    <ThemeProvider value={fixedTheme}>
+      <Stack screenOptions={{ headerShown: false }}>
+        <Stack.Screen name="index" options={{ headerShown: false }} />
+        <Stack.Screen name="+not-found" />
+      </Stack>
+
+      <StatusBar style="auto" />
     </ThemeProvider>
   );
 }
