@@ -132,18 +132,18 @@ export const signInWithGoogle = async () => {
     const userCredential = await signInWithPopup(auth, provider);
     const user = userCredential.user;
 
-    console.log("User Logged In:", user);  // ✅ ตรวจสอบค่าผู้ใช้ที่ login
+    console.log("User Logged In:", user);  //  ตรวจสอบค่าผู้ใช้ที่ login
 
     if (user) {
       const { uid, displayName, email, photoURL } = user;
 
-      console.log("Saving to Firestore:", uid, displayName, email);  // ✅ Debug จุดนี้
+      console.log("Saving to Firestore:", uid, displayName, email); 
 
       // บันทึกข้อมูล
       const userRef = doc(db, "users", uid);
       await setDoc(userRef, { uid, name: displayName, email, photoURL }, { merge: true });
 
-      console.log("Firestore Saved Successfully!");  // ✅ ตรวจสอบว่า save สำเร็จ
+      console.log("Firestore Saved Successfully!");  //  ตรวจสอบว่า save สำเร็จ
 
       return userCredential;
     }

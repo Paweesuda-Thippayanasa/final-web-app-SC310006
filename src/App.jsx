@@ -6,6 +6,7 @@ import HomePage from "./components/HomePage";
 import EditProfilePage from "./components/EditProfilePage";
 import AddCourse from "./components/AddCourse";
 import ManageClassroom from "./components/ManageClassroom";
+import Question from "./components/Question";
 
 function App() {
 
@@ -17,6 +18,7 @@ function App() {
 				<Route path="/edit-profile" element={<EditProfilePage/>} />
 				<Route path="/add-course" element={<AddCourse/>} />
 				<Route path="/manage-classroom/:id" element={<ManageClassroom />} /> 
+				<Route path="/question" element={<Question />} /> 
 			</Routes>
 		</div>
 	);

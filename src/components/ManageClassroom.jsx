@@ -57,15 +57,11 @@ const ManageClassroom = () => {
 
   const generateQRCode = async () => {
     if (qrCanvasRef.current) {
-      const baseUrl = import.meta.env.MODE === "development"
-        ? "http://localhost:5173/classroom/"
-        : "https://paweesuda-thippayanasa.github.io/final-web-app-SC310006/classroom/";
-      
-      const qrText = `${baseUrl}${id}`;
-      
+      const qrData = JSON.stringify({ classroomId: id });
+  
       try {
         const canvas = document.createElement("canvas");
-        await QRCode.toCanvas(canvas, qrText, { 
+        await QRCode.toCanvas(canvas, qrData, { 
           width: 256,
           margin: 2,
           color: {
@@ -73,6 +69,7 @@ const ManageClassroom = () => {
             light: '#ffffff'
           }
         });
+  
         qrCanvasRef.current.innerHTML = '';
         qrCanvasRef.current.appendChild(canvas);
       } catch (error) {
@@ -80,7 +77,7 @@ const ManageClassroom = () => {
       }
     }
   };
-
+  
   const addCheckin = async () => {
     try {
       const checkinData = {
