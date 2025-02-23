@@ -5,6 +5,8 @@ import { useRouter } from 'expo-router';
 export default function IndexScreen() {
   const router = useRouter();
 
+  
+
   return (
     <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
       <Text>Welcome to the Class Room App!</Text>

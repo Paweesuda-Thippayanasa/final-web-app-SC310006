@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { View, ActivityIndicator } from "react-native";
-import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useRouter } from "expo-router";
+import { getUserFromStorage } from "./services/storage";
 
 const App = () => {
   const router = useRouter();
@@ -9,11 +9,11 @@ const App = () => {
 
   useEffect(() => {
     const checkUserSession = async () => {
-      const user = await AsyncStorage.getItem("user");
+      const user = await getUserFromStorage();
       if (user) {
-        router.replace("/(home)"); // ✅ Redirect to home instead of /(home)/index
+        router.replace("/(home)"); // ✅ ถ้ามี user ให้ไปที่หน้า Home
       } else {
-        router.replace("/login"); // ✅ Redirect to login if not authenticated
+        router.replace("/login"); // ✅ ถ้าไม่มี user ให้ไปที่ Login
       }
       setLoading(false);
     };
