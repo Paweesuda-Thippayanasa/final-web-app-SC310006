@@ -12,13 +12,21 @@ import {
 	writeBatch,
 	arrayUnion,
 } from "firebase/firestore";
-import { getDatabase, ref, onValue, off } from "firebase/database";
+import {
+	getDatabase,
+	ref,
+	push,
+	set,
+	get,
+	serverTimestamp,
+	onValue,
+	off,
+} from "firebase/database";
 import { database } from "../../firebase-config";
 import QRCode from "qrcode";
 
 const ManageClassroom = () => {
 	const { id } = useParams();
-	const navigate = useNavigate();
 	const db = getFirestore();
 	const [classroom, setClassroom] = useState(null);
 	const [students, setStudents] = useState([]);
@@ -29,6 +37,8 @@ const ManageClassroom = () => {
 		new Date().toISOString().split("T")[0]
 	); // Default to current date
 	const qrCanvasRef = useRef(null);
+	const navigate = useNavigate();
+
 	useEffect(() => {
 		const db = getDatabase();
 		const studentsRef = ref(db, `classroom/${id}/students`);
@@ -175,6 +185,46 @@ const ManageClassroom = () => {
 		}
 	};
 
+	const handleAddCheckin = async () => {
+		try {
+			const db = getDatabase(); // ใช้ getDatabase() เพื่อเชื่อมต่อกับ Firebase
+			const checkinRef = ref(db, `classroom/${id}/checkin`);
+			const newCheckinRef = push(checkinRef);
+			const cno = newCheckinRef.key;
+
+			// ใช้ serverTimestamp() ของ Firebase
+			await set(newCheckinRef, {
+				createdAt: serverTimestamp(), // กำหนดเวลาเป็นเวลาของ Firebase Server
+				status: 0,
+			});
+
+			// ดึงรายชื่อนักเรียนจาก /students
+			const studentsRef = ref(db, `classroom/${id}/students`);
+			const studentsSnapshot = await get(studentsRef);
+
+			if (studentsSnapshot.exists()) {
+				const studentsData = studentsSnapshot.val();
+				const scoresRef = ref(db, `classroom/${id}/checkin/${cno}/scores`);
+
+				// คัดลอกรายชื่อนักเรียนเข้า /scores
+				const updates = {};
+				Object.keys(studentsData).forEach((studentId) => {
+					updates[studentId] = {
+						...studentsData[studentId],
+						status: 0,
+					};
+				});
+
+				await set(scoresRef, updates);
+			}
+
+			// ไปยังหน้าการเช็คชื่อ
+			navigate(`/checkin/${id}/${cno}`);
+		} catch (error) {
+			console.error("Error creating check-in:", error);
+		}
+	};
+
 	if (loading) {
 		return (
 			<div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 flex items-center justify-center">
@@ -251,10 +301,10 @@ const ManageClassroom = () => {
 										QR Code สำหรับลงทะเบียน
 									</h3>
 									<p className="text-xl font-semibold text-gray-800">
-                  {classroom.info?.name}
+										{classroom.info?.name}
 									</p>
 									<p className="text-lg text-gray-700 font-medium">
-                  รหัสวิชา: {classroom.info?.code}
+										รหัสวิชา: {classroom.info?.code}
 									</p>
 								</div>
 								<button
@@ -286,7 +336,7 @@ const ManageClassroom = () => {
 						</div>
 					</div>
 				)}
-        
+
 				{/* Students List */}
 				<div className="bg-white rounded-2xl shadow-lg overflow-hidden">
 					<div className="p-6 border-b border-gray-100">
@@ -356,7 +406,7 @@ const ManageClassroom = () => {
 									className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
 								/>
 								<button
-									onClick={() => navigate(`/checkin/${id}`)} // Route to checkin management
+									onClick={handleAddCheckin}
 									className="px-6 py-3 bg-blue-500 text-white rounded-xl font-medium shadow-lg shadow-blue-500/20 hover:bg-blue-600 transition duration-200 transform hover:scale-105"
 								>
 									เพิ่มการเช็คชื่อ

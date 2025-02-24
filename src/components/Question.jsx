@@ -11,10 +11,9 @@ const Question = () => {
 	const [isQuestionActive, setIsQuestionActive] = useState(false);
 	const [showQuestionsPopup, setShowQuestionsPopup] = useState(false); // สถานะแสดง Popup คำถาม
 	const [isQuestionCreated, setIsQuestionCreated] = useState(false); // สถานะตรวจสอบว่ามีการสร้างคำถามแล้วหรือไม่
-	const { classroomId } = useParams();
+	const { classroomId, checkinId } = useParams();
 
-	// Mock checkInId (cno) ชั่วคราว
-	const checkInId = "1"; // กำหนดค่า cno เป็น "1" ชั่วคราว
+	const checkInId = checkinId;
 
 	useEffect(() => {
 		const answersRef = ref(
@@ -37,20 +36,18 @@ const Question = () => {
 		return () => off(answersRef);
 	}, [classroomId]);
 
-	// เพิ่มคำถามใหม่
 	const addQuestion = (type) => {
 		const newQuestion = {
 			id: questions.length + 1,
-			type: type, // 'text' หรือ 'choice'
+			type: type,
 			questionNo: "",
 			questionText: "",
-			choices: type === "choice" ? ["", ""] : [], // ถ้าเป็น choice ให้มีตัวเลือก 2 ตัวเริ่มต้น
-			isEditing: true, // เพิ่มสถานะการแก้ไข
+			choices: type === "choice" ? ["", ""] : [],
+			isEditing: true,
 		};
 		setQuestions([...questions, newQuestion]);
-		setIsQuestionCreated(true); // ตั้งค่าเป็น true เมื่อสร้างคำถาม
+		setIsQuestionCreated(true);
 	};
-
 	// อัพเดทคำถาม
 	const updateQuestion = (id, field, value) => {
 		const updatedQuestions = questions.map((q) =>
@@ -86,12 +83,8 @@ const Question = () => {
 			.catch((error) => {
 				console.error("เกิดข้อผิดพลาด: ", error);
 			});
-        
-       
 	};
 
-	// เริ่มถามคำถามทั้งหมด
-	
 	const startQuestions = () => {
 		if (questions.length === 0) {
 			alert("กรุณาเพิ่มคำถามก่อน");
@@ -100,7 +93,7 @@ const Question = () => {
 
 		const questionRef = ref(
 			database,
-			`classroom/${classroomId}/checkin/${checkInId}`
+			`classroom/${classroomId}/checkin/${checkinId}`
 		);
 		const questionsData = questions.reduce((acc, q) => {
 			acc[q.id] = {
@@ -118,14 +111,13 @@ const Question = () => {
 		})
 			.then(() => {
 				setIsQuestionActive(true);
-				setShowQuestionsPopup(true); // แสดง Popup คำถาม
+				setShowQuestionsPopup(true);
 				alert("เริ่มถามคำถามเรียบร้อย");
 			})
 			.catch((error) => {
 				console.error("เกิดข้อผิดพลาด: ", error);
 			});
 	};
-
 	// ปิดคำถาม
 	const endQuestion = () => {
 		const questionRef = ref(
