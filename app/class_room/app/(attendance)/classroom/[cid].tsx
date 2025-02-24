@@ -107,6 +107,7 @@ const styles = StyleSheet.create({
     height: 200,
     borderRadius: 12,
     marginBottom: 16,
+    marginTop: 28,
   },
   courseName: {
     fontSize: 24,

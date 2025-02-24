@@ -7,20 +7,17 @@ import {
   StyleSheet,
   Image,
   SafeAreaView,
+  ScrollView,
   useWindowDimensions,
 } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useRouter } from "expo-router";
 import { signOut } from "firebase/auth";
 import { auth, dbRealtime } from "../../services/firebase"; // Import Realtime Database instance
-import { ref, get, child } from "firebase/database"; // Realtime Database methods
-import { db } from "../../services/firebase"; // Assuming dbFirestore is your Firestore instance
+import { ref, get } from "firebase/database"; // Realtime Database methods
+import { db } from "../../services/firebase"; // Firestore instance
 import { doc, getDoc } from "firebase/firestore"; // Firestore methods
-import {
-  GraduationCap,
-  PlusCircle,
-  BookOpen
-} from "lucide-react-native";
+import { GraduationCap, PlusCircle, BookOpen } from "lucide-react-native";
 
 const HomeScreen = () => {
   const router = useRouter();
@@ -45,46 +42,33 @@ const HomeScreen = () => {
         try {
           const snapshot = await get(coursesRef);
           if (snapshot.exists()) {
-            // Convert the snapshot to an array of courses
-            const coursesData = Object.entries(snapshot.val()).map(([key, value]) => ({
-              cid: key, // Use the key as the course ID
-              ...(value as any), // Include other fields (e.g., status)
-            })).filter((course: any) => course.status === 2); // Filter courses by status: 2 (enrolled)
-    
-            // Log coursesData from Realtime Database
-            console.log("Courses Data from Realtime DB:", coursesData);
-    
-            // Fetch course names from Firestore for each course
-            const coursesWithNames = await Promise.all(coursesData.map(async (course: any) => {
-              const courseRef = doc(db, `classroom/${course.cid}`);
-              const courseSnapshot = await getDoc(courseRef);
-    
-              // Log Firestore document ID and snapshot
-              console.log("Firestore Document ID:", course.cid);
-              console.log("Firestore Snapshot:", courseSnapshot.exists() ? courseSnapshot.data() : "Document does not exist");
-    
-              // Check if course exists in Firestore and fetch the name from the 'info' field
-              const courseName = courseSnapshot.exists()
-                ? courseSnapshot.data().info?.name || "Unknown Course"
-                : "Unknown Course";
-    
-              // Return the updated course data including the course name from Firestore
-              return { ...course, courseName };
-            }));
-    
-            // Log the final coursesWithNames
-            console.log("Courses with Names:", coursesWithNames);
-    
+            const coursesData = Object.entries(snapshot.val())
+              .map(([key, value]) => ({
+                cid: key,
+                ...(value as any),
+              }))
+              .filter((course: any) => course.status === 2);
+
+            const coursesWithNames = await Promise.all(
+              coursesData.map(async (course: any) => {
+                const courseRef = doc(db, `classroom/${course.cid}`);
+                const courseSnapshot = await getDoc(courseRef);
+
+                const courseName = courseSnapshot.exists()
+                  ? courseSnapshot.data().info?.name || "Unknown Course"
+                  : "Unknown Course";
+
+                return { ...course, courseName };
+              })
+            );
+
             setEnrolledCourses(coursesWithNames);
-          } else {
-            console.log("No enrolled courses found in Realtime DB.");
           }
         } catch (error) {
           console.error("Error fetching courses: ", error);
         }
       }
     };
-
 
     fetchUser();
     fetchEnrolledCourses();
@@ -112,46 +96,65 @@ const HomeScreen = () => {
 
   return (
     <SafeAreaView style={styles.container}>
-      {/* Profile Section */}
-      <View style={[styles.profileCard, isLargeScreen && styles.profileCardLarge]}>
-        <Image
-          source={{ uri: user?.photoURL || "https://via.placeholder.com/100" }}
-          style={styles.profileImage}
-        />
-        <View style={styles.profileInfo}>
-          <Text style={styles.profileName}>{user?.displayName || "Mina Kokila"}</Text>
-          <Text style={styles.profileEmail}>{user?.email || "User@gmail.com"}</Text>
-          <Text style={styles.profilePhone}>0651236589</Text>
+      <ScrollView
+        contentContainerStyle={styles.scrollContainer}
+        showsVerticalScrollIndicator={false}
+        keyboardShouldPersistTaps="handled"
+      >
+        {/* Profile Section */}
+        <View style={[styles.profileCard, isLargeScreen && styles.profileCardLarge]}>
+          <Image
+            source={{ uri: user?.photoURL || "https://via.placeholder.com/100" }}
+            style={styles.profileImage}
+          />
+          <View style={styles.profileInfo}>
+            <Text style={styles.profileName}>{user?.displayName || "Mina Kokila"}</Text>
+            <Text style={styles.profileEmail}>{user?.email || "User@gmail.com"}</Text>
+            <Text style={styles.profilePhone}>0651236589</Text>
+          </View>
         </View>
-      </View>
 
-      {/* Subject Header */}
-      <View style={styles.headerContainer}>
-        <GraduationCap size={24} color="#1e3a8a" />
-        <Text style={styles.headerText}>วิชาเรียน</Text>
-      </View>
+        {/* Subject Header */}
+        {/* Subject Header with Add Button */}
+        <View style={styles.headerContainer}>
+          <View style={styles.headerLeft}>
+            <GraduationCap size={24} color="#1e3a8a" />
+            <Text style={styles.headerText}>วิชาเรียน</Text>
+          </View>
+          {/* <TouchableOpacity style={styles.addButton} onPress={() => router.push('/(home)/add_course')}>
+            <PlusCircle size={20} color="#ffffff" />
+            <Text style={styles.addButtonText}>เพิ่มวิชา</Text>
+          </TouchableOpacity> */}
+        </View>
 
-      {/* Grid Navigation - Display Enrolled Courses */}
-      <View style={[styles.gridContainer, isLargeScreen && styles.gridContainerLarge]}>
-        {enrolledCourses.length > 0 ? (
-          enrolledCourses.map((course, index) => (
-            <TouchableOpacity key={index} style={[styles.gridItem, isLargeScreen && styles.gridItemLarge]}    onPress={() => {router.navigate(`/(attendance)/classroom/${course.cid}`);}}>
-              <View style={[styles.iconCircle, { backgroundColor: '#bbf7d0' }]}>
-                <BookOpen size={24} color="#15803d" />
-              </View>
-              <Text style={styles.gridText}>{course.courseName}</Text> {/* Display course name */}
-            </TouchableOpacity>
-          ))
-        ) : (
-          <Text style={styles.noCoursesText}>No courses enrolled yet.</Text>
-        )}
-      </View>
+        <TouchableOpacity style={styles.addButton} onPress={() => router.push('/(home)/add_course')}>
+            <PlusCircle size={20} color="#ffffff" />
+            <Text style={styles.addButtonText}>เพิ่มวิชา</Text>
+          </TouchableOpacity>
 
-      {/* Add Subject Button */}
-      <TouchableOpacity style={styles.addButton} onPress={() => router.push('/(home)/add_course')}>
-        <PlusCircle size={24} color="#ffffff" />
-        <Text style={styles.addButtonText}>เพิ่มวิชา</Text>
-      </TouchableOpacity>
+
+        {/* Grid Navigation - Display Enrolled Courses */}
+        <View style={[styles.gridContainer, isLargeScreen && styles.gridContainerLarge]}>
+          {enrolledCourses.length > 0 ? (
+            enrolledCourses.map((course, index) => (
+              <TouchableOpacity
+                key={index}
+                style={[styles.gridItem, isLargeScreen && styles.gridItemLarge]}
+                onPress={() => router.navigate(`/(attendance)/classroom/${course.cid}`)}
+              >
+                <View style={[styles.iconCircle, { backgroundColor: "#bbf7d0" }]}>
+                  <BookOpen size={24} color="#15803d" />
+                </View>
+                <Text style={styles.gridText}>{course.courseName}</Text>
+              </TouchableOpacity>
+            ))
+          ) : (
+            <Text style={styles.noCoursesText}>No courses enrolled yet.</Text>
+          )}
+        </View>
+
+
+      </ScrollView>
     </SafeAreaView>
   );
 };
@@ -161,6 +164,30 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: "#f8fafc",
   },
+  scrollContainer: {
+    flexGrow: 1,
+    paddingBottom: 20,
+  },
+  headerContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+  },
+  
+  headerLeft: {
+    flex: 1, // Allows text and icon to take up available space
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  
+  headerText: {
+    fontSize: 20,
+    fontWeight: "600",
+    color: "#1e3a8a",
+    marginLeft: 8,
+  },
+  
   loadingContainer: {
     flex: 1,
     justifyContent: "center",
@@ -193,57 +220,47 @@ const styles = StyleSheet.create({
     fontWeight: "600",
     color: "#1e3a8a",
   },
-  headerContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    padding: 16,
-  },
-  headerText: {
-    fontSize: 20,
-    fontWeight: "600",
-    color: "#1e3a8a",
-    marginLeft: 8,
-  },
   gridContainer: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
+    flexDirection: "row",
+    flexWrap: "wrap",
     padding: 8,
-    justifyContent: 'space-between',
   },
   gridContainerLarge: {
-    justifyContent: 'center',
+    justifyContent: "center",
   },
   gridItem: {
-    width: '30%',
-    aspectRatio: 1,
-    backgroundColor: '#ffffff',
+    width: "100%",
+    aspectRatio: 1.8,
+    backgroundColor: "#ffffff",
     borderRadius: 16,
     padding: 12,
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
     elevation: 2,
     margin: 5,
+    marginHorizontal: 0,
   },
   gridItemLarge: {
-    width: '22%',
+    width: "22%",
   },
   iconCircle: {
     width: 48,
     height: 48,
     borderRadius: 24,
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
   },
   gridText: {
     fontSize: 14,
     fontWeight: "500",
-    textAlign: 'center',
+    textAlign: "center",
+    marginTop: 8,
   },
   addButton: {
     backgroundColor: "#3b82f6",
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
     padding: 16,
     borderRadius: 12,
     margin: 16,
@@ -255,12 +272,13 @@ const styles = StyleSheet.create({
     marginLeft: 8,
   },
   noCoursesText: {
-    fontSize: 16,
+    flex: 1,
+    fontSize: 18,
     fontWeight: "500",
     color: "#1e3a8a",
     textAlign: "center",
     marginTop: 16,
-  }
+  },
 });
 
 export default HomeScreen;

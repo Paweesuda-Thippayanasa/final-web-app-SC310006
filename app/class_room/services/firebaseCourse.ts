@@ -26,7 +26,7 @@ export async function addStudentToCourse(cid: string, stdid: string, name: strin
         // Reference to store classroom status for the user in Realtime Database
         const userClassRef = ref(dbRealtime, `users/${user.uid}/classroom/${cid}`);
         await set(userClassRef, {
-            status: 2, // Set status as '2' for enrolled (you can adjust this status if needed)
+            status: 2,
         });
 
         console.log("Student successfully registered to the course!");
