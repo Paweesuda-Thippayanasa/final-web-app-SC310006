@@ -91,6 +91,7 @@ const Question = () => {
 	};
 
 	// เริ่มถามคำถามทั้งหมด
+	
 	const startQuestions = () => {
 		if (questions.length === 0) {
 			alert("กรุณาเพิ่มคำถามก่อน");
