@@ -2,6 +2,7 @@ import { initializeApp } from "firebase/app";
 import { getFirestore, doc, setDoc } from "firebase/firestore"; // เพิ่มการนำเข้า Firestore
 import { getAnalytics } from "firebase/analytics";
 import { getAuth, GoogleAuthProvider, signInWithPopup ,signOut} from "firebase/auth";
+import { getDatabase} from "firebase/database";
 
 const firebaseConfig = {
   apiKey: import.meta.env.VITE_API_KEY,
@@ -10,14 +11,18 @@ const firebaseConfig = {
   storageBucket: import.meta.env.VITE_STORAGE_BUCKET,
   messagingSenderId: import.meta.env.VITE_MESSAGING_SENDER_ID,
   appId: import.meta.env.VITE_APP_ID,
-  measurementId: import.meta.env.VITE_MEASUREMENT_ID
+  measurementId: import.meta.env.VITE_MEASUREMENT_ID,
+  databaseURL:import.meta.env.VITE_DATABASE_URL
 };
 // Initialize Firebase
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);  // การเชื่อมต่อกับ Firestore
 const analytics = getAnalytics(app);
 export const auth = getAuth(app);
+export  const database = getDatabase(app);
 export default app;
+
+
 
 // ฟังก์ชันสร้างข้อมูล /users/{uid}
 async function createUser(uid, name, email, photo, classroom) {
@@ -132,18 +137,18 @@ export const signInWithGoogle = async () => {
     const userCredential = await signInWithPopup(auth, provider);
     const user = userCredential.user;
 
-    console.log("User Logged In:", user);  // ✅ ตรวจสอบค่าผู้ใช้ที่ login
+    console.log("User Logged In:", user);  //  ตรวจสอบค่าผู้ใช้ที่ login
 
     if (user) {
       const { uid, displayName, email, photoURL } = user;
 
-      console.log("Saving to Firestore:", uid, displayName, email);  // ✅ Debug จุดนี้
+      console.log("Saving to Firestore:", uid, displayName, email); 
 
       // บันทึกข้อมูล
       const userRef = doc(db, "users", uid);
       await setDoc(userRef, { uid, name: displayName, email, photoURL }, { merge: true });
 
-      console.log("Firestore Saved Successfully!");  // ✅ ตรวจสอบว่า save สำเร็จ
+      console.log("Firestore Saved Successfully!");  //  ตรวจสอบว่า save สำเร็จ
 
       return userCredential;
     }
