@@ -13,6 +13,33 @@ const Question = () => {
   const [isQuestionCreated, setIsQuestionCreated] = useState(false); // สถานะตรวจสอบว่ามีการสร้างคำถามแล้วหรือไม่
   const { classroomId, checkinId } = useParams();
   const [loading, setLoading] = useState(true);
+  const [students, setStudents] = useState({}); // เก็บข้อมูลนักเรียนในห้องเรียน
+
+  // ดึงข้อมูลนักเรียนในห้องเรียนเพื่อใช้แสดงชื่อในคำตอบ
+  useEffect(() => {
+    const fetchStudentsData = async () => {
+      try {
+        const db = getDatabase();
+        const studentsRef = ref(db, `classroom/${classroomId}/students`);
+        
+        onValue(studentsRef, (snapshot) => {
+          if (snapshot.exists()) {
+            setStudents(snapshot.val());
+          }
+        });
+      } catch (error) {
+        console.error("Error fetching students data:", error);
+      }
+    };
+    
+    fetchStudentsData();
+    
+    return () => {
+      const db = getDatabase();
+      const studentsRef = ref(db, `classroom/${classroomId}/students`);
+      off(studentsRef);
+    };
+  }, [classroomId]);
 
   // ดึงข้อมูลคำถามและคำตอบจาก Firebase เมื่อโหลดหน้า
   useEffect(() => {
@@ -95,13 +122,30 @@ const Question = () => {
               
               // ดึงข้อมูลนักเรียนที่ตอบคำถาม
               if (data.students) {
-                const answersList = Object.entries(data.students).map(([studentId, value]) => ({
-                  id: studentId,
-                  text: value.text || "",
-                  time: value.time || new Date().toLocaleString("th-TH"),
-                  studentId: studentId,
-                  studentName: value.name || "",
-                }));
+                const answersList = Object.entries(data.students).map(([key, value]) => {
+                  // ดึงข้อมูลนักเรียนจากสตอร์ที่เราโหลดมาก่อนหน้า
+                  // ในกรณีนี้ key อาจเป็น UID หรือ stdId (เช่น "653380280-0")
+                  
+                  // หาข้อมูลนักเรียนจาก key โดยตรง หรือจาก stdId
+                  const studentInfo = Object.entries(students).find(([_, student]) => 
+                    student.stdid === key || _ === key
+                  );
+                  
+                  // ดึงชื่อนักเรียนจากข้อมูลที่พบ
+                  let studentName = value.name || ""; // ใช้ชื่อที่มีใน answer ก่อน (ถ้ามี)
+                  
+                  if (!studentName && studentInfo) {
+                    studentName = studentInfo[1].name; // ใช้ชื่อจากข้อมูลนักเรียน
+                  }
+                  
+                  return {
+                    id: key,
+                    text: value.text || "",
+                    time: value.time ? new Date(value.time).toLocaleString("th-TH") : new Date().toLocaleString("th-TH"),
+                    studentId: key,
+                    studentName: studentName || `นักเรียน (${key})`,
+                  };
+                });
                 
                 setAnswers(answersList);
               } else {
@@ -134,7 +178,7 @@ const Question = () => {
       off(questionStatusRef);
       off(questionsRef);
     };
-  }, [classroomId, checkinId, activeQuestionNo, isQuestionActive]);
+  }, [classroomId, checkinId, activeQuestionNo, isQuestionActive, students]);
 
   // เพิ่มคำถาม
   const addQuestion = (type) => {
@@ -523,11 +567,18 @@ const Question = () => {
                     key={answer.id}
                     className="bg-gray-50 p-6 rounded-xl border border-gray-100 hover:border-purple-200 transition duration-200"
                   >
-                    <div className="flex justify-between items-start mb-2">
-                      <p className="text-gray-800 text-lg font-medium">{answer.studentName || "นักเรียน"}</p>
+                    <div className="flex justify-between items-start mb-3">
+                      <div className="flex items-center">
+                        <div className="w-10 h-10 rounded-full bg-purple-100 text-purple-600 flex items-center justify-center font-bold mr-3">
+                          {answer.studentName ? answer.studentName.charAt(0) : "?"}
+                        </div>
+                        <p className="text-gray-800 text-lg font-medium">{answer.studentName}</p>
+                      </div>
                       <span className="text-sm text-gray-500">{answer.time}</span>
                     </div>
-                    <p className="text-gray-800 text-lg">{answer.text}</p>
+                    <div className="mt-2 pt-2 border-t border-gray-100">
+                      <p className="text-gray-800 text-lg">{answer.text}</p>
+                    </div>
                   </div>
                 ))}
               </div>
@@ -539,7 +590,7 @@ const Question = () => {
                 {isQuestionActive && activeQuestionNo && (
                   <p className="text-gray-400 mt-2">รอคำตอบจากนักเรียน...</p>
                 )}
-              </div>
+</div>
             )}
           </div>
         </div>
