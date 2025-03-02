@@ -49,20 +49,42 @@ const HomeScreen = () => {
               }))
               .filter((course: any) => course.status === 2);
 
-            const coursesWithNames = await Promise.all(
+            const coursesWithDetails = await Promise.all(
               coursesData.map(async (course: any) => {
                 const courseRef = doc(db, `classroom/${course.cid}`);
                 const courseSnapshot = await getDoc(courseRef);
 
                 const courseName = courseSnapshot.exists()
-                  ? courseSnapshot.data().info?.name || "Unknown Course"
+                  ? courseSnapshot.data()?.info?.name || "Unknown Course"
                   : "Unknown Course";
 
-                return { ...course, courseName };
+                const ownerId = courseSnapshot.exists()
+                  ? courseSnapshot.data()?.owner
+                  : null;
+
+                let courseOwner = "Unknown Owner";
+                if (ownerId) {
+                  const ownerRef = doc(db, `users/${ownerId}`);
+                  const ownerSnapshot = await getDoc(ownerRef);
+                  if (ownerSnapshot.exists()) {
+                    courseOwner = ownerSnapshot.data()?.name || "Unknown Owner";
+                  } else {
+                    console.log("Owner not found.");
+                  }
+                } else {
+                  console.log("Owner ID not found.");
+                }
+
+                const coursePhoto = courseSnapshot.exists()
+                  ? courseSnapshot.data()?.info?.photo ||
+                  "https://cdn-icons-png.flaticon.com/512/3177/3177440.png"
+                  : "https://cdn-icons-png.flaticon.com/512/3177/3177440.png";
+
+                return { ...course, courseName, coursePhoto, courseOwner };
               })
             );
 
-            setEnrolledCourses(coursesWithNames);
+            setEnrolledCourses(coursesWithDetails);
           }
         } catch (error) {
           console.error("Error fetching courses: ", error);
@@ -101,16 +123,22 @@ const HomeScreen = () => {
         showsVerticalScrollIndicator={false}
         keyboardShouldPersistTaps="handled"
       >
-        {/* Profile Section */}
+// เพิ่มปุ่มออกระบบในส่วน Profile Section ดังนี้
         <View style={[styles.profileCard, isLargeScreen && styles.profileCardLarge]}>
           <Image
-            source={{ uri: user?.photoURL || "https://via.placeholder.com/100" }}
+            source={{ uri: user?.photoURL || "https://cdn-icons-png.flaticon.com/512/3177/3177440.png" }}
             style={styles.profileImage}
           />
           <View style={styles.profileInfo}>
             <Text style={styles.profileName}>{user?.displayName || "Mina Kokila"}</Text>
-            <Text style={styles.profileEmail}>{user?.email || "User@gmail.com"}</Text>
-            <Text style={styles.profilePhone}>0651236589</Text>
+            <Text style={styles.profileEmail}>{user?.email || ""}</Text>
+            <Text style={styles.profilePhone}>{user?.phone || ""}</Text>
+            <TouchableOpacity
+              style={styles.logoutButton}
+              onPress={handleLogout}
+            >
+              <Text style={styles.logoutButtonText}>ออกจากระบบ</Text>
+            </TouchableOpacity>
           </View>
         </View>
 
@@ -128,9 +156,9 @@ const HomeScreen = () => {
         </View>
 
         <TouchableOpacity style={styles.addButton} onPress={() => router.push('/(home)/add_course')}>
-            <PlusCircle size={20} color="#ffffff" />
-            <Text style={styles.addButtonText}>เพิ่มวิชา</Text>
-          </TouchableOpacity>
+          <PlusCircle size={20} color="#ffffff" />
+          <Text style={styles.addButtonText}>เพิ่มวิชา</Text>
+        </TouchableOpacity>
 
 
         {/* Grid Navigation - Display Enrolled Courses */}
@@ -142,10 +170,17 @@ const HomeScreen = () => {
                 style={[styles.gridItem, isLargeScreen && styles.gridItemLarge]}
                 onPress={() => router.navigate(`/(attendance)/classroom/${course.cid}`)}
               >
-                <View style={[styles.iconCircle, { backgroundColor: "#bbf7d0" }]}>
+                {/* <View style={[styles.iconCircle, { backgroundColor: "#bbf7d0" }]}>
                   <BookOpen size={24} color="#15803d" />
+                </View> */}
+                <Image
+                  source={{ uri: course.coursePhoto || "https://cdn-icons-png.flaticon.com/512/3177/3177440.png" }}
+                  style={styles.profileImage}
+                />
+                <View style={styles.gridInfo}>
+                  <Text style={styles.gridText}>{course.courseName}</Text>
+                  <Text style={styles.gridTextOwner}>{course.courseOwner}</Text>
                 </View>
-                <Text style={styles.gridText}>{course.courseName}</Text>
               </TouchableOpacity>
             ))
           ) : (
@@ -174,20 +209,20 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 10,
   },
-  
+
   headerLeft: {
     flex: 1, // Allows text and icon to take up available space
     flexDirection: "row",
     alignItems: "center",
   },
-  
+
   headerText: {
     fontSize: 20,
     fontWeight: "600",
     color: "#1e3a8a",
     marginLeft: 8,
   },
-  
+
   loadingContainer: {
     flex: 1,
     justifyContent: "center",
@@ -221,7 +256,7 @@ const styles = StyleSheet.create({
     color: "#1e3a8a",
   },
   gridContainer: {
-    flexDirection: "row",
+    // flexDirection: "row",
     flexWrap: "wrap",
     padding: 8,
   },
@@ -229,13 +264,15 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   gridItem: {
+    flex: 1,
+    flexDirection: "row",
     width: "100%",
-    aspectRatio: 1.8,
+    // aspectRatio: 1.8,
     backgroundColor: "#ffffff",
     borderRadius: 16,
     padding: 12,
-    alignItems: "center",
-    justifyContent: "center",
+    // alignItems: "center",
+    // justifyContent: "center",
     elevation: 2,
     margin: 5,
     marginHorizontal: 0,
@@ -251,10 +288,22 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   gridText: {
-    fontSize: 14,
+    fontSize: 22,
     fontWeight: "500",
-    textAlign: "center",
+    // textAlign: "center",
     marginTop: 8,
+    color: "#1e3a8a",
+    marginLeft: 8,
+  },
+  gridInfo: {
+    textAlign: "left",
+  },
+  gridTextOwner: {
+    fontSize: 16,
+    fontWeight: "400",
+    marginTop: 8,
+    color: "#1e3a8a",
+    marginLeft: 8,
   },
   addButton: {
     backgroundColor: "#3b82f6",
@@ -278,6 +327,19 @@ const styles = StyleSheet.create({
     color: "#1e3a8a",
     textAlign: "center",
     marginTop: 16,
+  },
+  logoutButton: {
+    backgroundColor: "#ef4444",
+    paddingVertical: 6,
+    paddingHorizontal: 12,
+    borderRadius: 8,
+    marginTop: 10,
+    alignSelf: "flex-start",
+  },
+  logoutButtonText: {
+    color: "#ffffff",
+    fontSize: 14,
+    fontWeight: "600",
   },
 });
 
