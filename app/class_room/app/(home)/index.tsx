@@ -131,8 +131,8 @@ const HomeScreen = () => {
           />
           <View style={styles.profileInfo}>
             <Text style={styles.profileName}>{user?.displayName || "Mina Kokila"}</Text>
-            <Text style={styles.profileEmail}>{user?.email || ""}</Text>
-            <Text style={styles.profilePhone}>{user?.phone || ""}</Text>
+            <Text >{user?.email || ""}</Text>
+            <Text >{user?.phone || ""}</Text>
             <TouchableOpacity
               style={styles.logoutButton}
               onPress={handleLogout}
@@ -170,9 +170,7 @@ const HomeScreen = () => {
                 style={[styles.gridItem, isLargeScreen && styles.gridItemLarge]}
                 onPress={() => router.navigate(`/(attendance)/classroom/${course.cid}`)}
               >
-                {/* <View style={[styles.iconCircle, { backgroundColor: "#bbf7d0" }]}>
-                  <BookOpen size={24} color="#15803d" />
-                </View> */}
+
                 <Image
                   source={{ uri: course.coursePhoto || "https://cdn-icons-png.flaticon.com/512/3177/3177440.png" }}
                   style={styles.profileImage}
@@ -291,12 +289,14 @@ const styles = StyleSheet.create({
     fontSize: 22,
     fontWeight: "500",
     // textAlign: "center",
-    marginTop: 8,
+    // marginTop: 8,
     color: "#1e3a8a",
     marginLeft: 8,
+    textAlign: 'left', 
   },
   gridInfo: {
-    textAlign: "left",
+    flexDirection: 'column',
+    // justifyContent: 'center',
   },
   gridTextOwner: {
     fontSize: 16,
@@ -304,6 +304,7 @@ const styles = StyleSheet.create({
     marginTop: 8,
     color: "#1e3a8a",
     marginLeft: 8,
+    textAlign: 'left',
   },
   addButton: {
     backgroundColor: "#3b82f6",

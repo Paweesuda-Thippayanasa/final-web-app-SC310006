@@ -11,20 +11,27 @@ import {
   Modal,
   ScrollView,
   StatusBar,
-  Platform,
 } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
-import { doc, getDoc, setDoc } from "firebase/firestore";
-import { db, dbRealtime } from "../../../services/firebase";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { getAuth } from "firebase/auth";
-import { ref, onValue, get, set } from "firebase/database";
 import { ArrowLeft, ArrowRight, QrCode, CheckCircle } from "lucide-react-native";
 import { CameraView, useCameraPermissions } from "expo-camera";
+import { 
+  checkIfUserIsCheckedIn, 
+  submitCheckIn, 
+  fetchCourseDetails,
+  setupQuestionListener as setupListener,
+  submitAnswer,
+  fetchUserAnswer
+} from "../../../services/firebaseCourse";
 
 const ClassroomDetail = () => {
   const router = useRouter();
-  const { cid } = useLocalSearchParams(); // Get the course ID from the route
+  const params = useLocalSearchParams();
+  // แปลงค่า cid ให้เป็น string เสมอ
+  const cid = typeof params.cid === 'string' ? params.cid : Array.isArray(params.cid) ? params.cid[0] : '';
+  
   const [course, setCourse] = useState<any>(null);
   const [ownerName, setOwnerName] = useState<string>("");
   const [loading, setLoading] = useState(true);
@@ -52,169 +59,114 @@ const ClassroomDetail = () => {
   const auth = getAuth();
   const currentUser = auth.currentUser;
 
+  // ตั้งค่า Listener สำหรับคำถาม
+  const setupQuestionListener = (checkInId: string) => {
+    return setupListener(cid, checkInId, (data) => {
+      const isQuestionActive = data.question_show === true;
+      
+      // Only show questions if user is checked in
+      setShowQuestion(isQuestionActive && checkedIn);
+
+      if (isQuestionActive && data.questions) {
+        const questionsData = Object.values(data.questions) as any[];
+        setQuestions(questionsData);
+        setCurrentQuestionIndex(0); // Reset to first question
+        setAnswerSubmitted({}); // Reset submitted answers
+        
+        // Pre-fetch the answer for the first question if available
+        if (questionsData.length > 0 && currentUser) {
+          fetchUserAnswer(cid, checkInId, questionsData[0].question_no)
+            .then(({ answer, submitted }) => {
+              if (submitted) {
+                setQuestionAnswer(answer);
+                setAnswerSubmitted(prev => ({ ...prev, [questionsData[0].question_no]: true }));
+              } else {
+                setQuestionAnswer("");
+              }
+            })
+            .catch(error => console.error("Error fetching answer:", error));
+        }
+      }
+    });
+  };
+
   useEffect(() => {
-    const fetchCourseDetails = async () => {
+    const loadData = async () => {
       try {
-        const courseRef = doc(db, `classroom/${cid}`);
-        const courseSnapshot = await getDoc(courseRef);
+        // ตรวจสอบว่ามีค่า cid หรือไม่
+        if (!cid) {
+          Alert.alert("Error", "No classroom ID provided");
+          router.back();
+          return;
+        }
 
-        if (courseSnapshot.exists()) {
-          const courseData = courseSnapshot.data();
-          setCourse(courseData);
+        // ดึงข้อมูลรายวิชา
+        const { course: courseData, ownerName: ownerNameData } = await fetchCourseDetails(cid);
+        setCourse(courseData);
+        setOwnerName(ownerNameData || "Unknown Owner");
 
-          const ownerId = courseData.owner;
-          if (ownerId) {
-            const ownerRef = doc(db, `users/${ownerId}`);
-            const ownerSnapshot = await getDoc(ownerRef);
-
-            if (ownerSnapshot.exists()) {
-              const ownerData = ownerSnapshot.data();
-              setOwnerName(ownerData.name || "Unknown Owner");
-            }
-          }
+        // ตรวจสอบสถานะการเช็คอิน
+        const { isCheckedIn, checkInId } = await checkIfUserIsCheckedIn(cid);
+        setCheckedIn(isCheckedIn);
+        
+        if (checkInId) {
+          setCurrentCno(checkInId);
+          setActiveCheckInId(checkInId);
+          // ตั้งค่า listener หลังจากรู้ค่า checkInId แล้ว
+          setupQuestionListener(checkInId);
+        } else {
+          // ใช้ค่า default ถ้าไม่มี checkInId
+          setupQuestionListener("-OKLa1zNGxELcL8mMdxS");
         }
       } catch (error) {
-        console.error("Error fetching course details: ", error);
+        console.error("Error loading data:", error);
       } finally {
         setLoading(false);
       }
     };
 
-    fetchCourseDetails();
-    setupQuestionListener();
-    checkIfUserIsCheckedIn();
+    loadData();
 
     // Setup camera permissions
     (async () => {
       const { status } = await requestPermission();
       setHasPermission(status === "granted");
     })();
-  }, [cid]);
 
-  const checkIfUserIsCheckedIn = async () => {
-    if (!currentUser) return;
-  
-    try {
-      // ตรวจสอบว่าผู้ใช้เช็คอินในเซสชันใดๆ ไม่จำเป็นต้องมี question_show
-      const checkInsRef = ref(dbRealtime, `classroom/${cid}/checkin`);
-      const checkInsSnapshot = await get(checkInsRef);
-  
-      if (checkInsSnapshot.exists()) {
-        let isUserCheckedIn = false;
-        let activeCheckIn = "";
-        let latestCheckIn = "";
-        let latestTime = 0;
-  
-        // ตรวจสอบทุกเซสชันการเช็คอิน
-        checkInsSnapshot.forEach((checkInSnapshot) => {
-          const checkInData = checkInSnapshot.val();
-          const checkInId = checkInSnapshot.key || "";
-          
-          // หาเซสชันที่ active (มี question_show)
-          if (checkInData.question_show !== undefined) {
-            activeCheckIn = checkInId;
-          }
-          
-          // ตรวจสอบว่าผู้ใช้เช็คอินในเซสชันนี้หรือไม่
-          if (checkInData.students && checkInData.students[currentUser.uid]) {
-            isUserCheckedIn = true;
-            
-            // หาเซสชันล่าสุดที่ผู้ใช้เช็คอิน (ใช้ในกรณีที่ไม่พบเซสชันที่ active)
-            const checkInTime = new Date(checkInData.students[currentUser.uid].date || 0).getTime();
-            if (checkInTime > latestTime) {
-              latestTime = checkInTime;
-              latestCheckIn = checkInId;
-            }
-          }
-        });
-  
-        // ใช้เซสชัน active ถ้ามี หรือใช้เซสชันล่าสุดที่ผู้ใช้เช็คอิน
-        const finalCheckInId = activeCheckIn || latestCheckIn;
-        
-        if (isUserCheckedIn && finalCheckInId) {
-          setCurrentCno(finalCheckInId);
-          setActiveCheckInId(finalCheckInId);
-          setCheckedIn(true);
-          console.log("User is checked in", finalCheckInId);
-        } else {
-          console.log("User is not checked in yet");
-        }
-      }
-    } catch (error) {
-      console.error("Error checking if user is checked in:", error);
-    }
-  };
-
-  // Set up real-time listener for questions
-  const setupQuestionListener = () => {
-    // First check if we know the active check-in ID
-    let checkInToListen = activeCheckInId;
-    
-    // If we don't have an active check-in ID, use a fallback
-    if (!checkInToListen) {
-      checkInToListen = "-OKLa1zNGxELcL8mMdxS"; // Fallback ID
-    }
-    
-    const questionRef = ref(dbRealtime, `/classroom/${cid}/checkin/${checkInToListen}`);
-
-    const unsubscribe = onValue(questionRef, (snapshot) => {
-      if (snapshot.exists()) {
-        const data = snapshot.val();
-        const isQuestionActive = data.question_show === true;
-        
-        // Only show questions if user is checked in
-        setShowQuestion(isQuestionActive && checkedIn);
-
-        if (isQuestionActive && data.questions) {
-          const questionsData = Object.values(data.questions) as any[];
-          setQuestions(questionsData);
-          setCurrentQuestionIndex(0); // Reset to first question
-          setAnswerSubmitted({}); // Reset submitted answers
-          
-          // Pre-fetch the answer for the first question if available
-          if (questionsData.length > 0 && currentUser) {
-            const question = questionsData[0];
-            const answerRef = ref(dbRealtime, `classroom/${cid}/checkin/${checkInToListen}/answers/${question.question_no}/${currentUser.uid}`);
-            get(answerRef).then((answerSnapshot) => {
-              if (answerSnapshot.exists()) {
-                setQuestionAnswer(answerSnapshot.val().text || "");
-                setAnswerSubmitted(prev => ({ ...prev, [question.question_no]: true }));
-              } else {
-                setQuestionAnswer("");
-              }
-            }).catch(error => console.error("Error fetching answer:", error));
-          }
-        }
-      }
-    }, (error) => {
-      console.error("Error setting up question listener:", error);
-    });
-
-    return unsubscribe;
-  };
+    // Clean up listener when component unmounts
+    return () => {
+      // Note: You should ideally store the unsubscribe function in state 
+      // and call it here for cleanup
+    };
+  }, [cid, router]);
 
   // Re-setup question listener when check-in status changes
   useEffect(() => {
-    if (checkedIn) {
-      setupQuestionListener();
+    if (checkedIn && activeCheckInId) {
+      setupQuestionListener(activeCheckInId);
     }
   }, [checkedIn, activeCheckInId]);
 
   // Fetch question details for a specific question
-  const fetchQuestionDetails = (questionNumber: string) => {
+  const fetchQuestionDetails = async (questionNumber: string) => {
     const question = questions.find(q => q.question_no === questionNumber);
-    if (question) {
-      setQuestionAnswer("");
-      setAnswerSubmitted(prev => ({ ...prev, [questionNumber]: false }));
+    if (!question) {
+      console.error("Question not found:", questionNumber);
+      return;
+    }
+    
+    setQuestionAnswer("");
+    setAnswerSubmitted(prev => ({ ...prev, [questionNumber]: false }));
 
-      if (currentUser) {
-        const answerRef = ref(dbRealtime, `classroom/${cid}/checkin/${currentCno}/answers/${questionNumber}/${currentUser.uid}`);
-        get(answerRef).then((answerSnapshot) => {
-          if (answerSnapshot.exists()) {
-            setQuestionAnswer(answerSnapshot.val().text || "");
-            setAnswerSubmitted(prev => ({ ...prev, [questionNumber]: true }));
-          }
-        }).catch(error => console.error("Error fetching answer:", error));
+    if (currentUser && currentCno) {
+      try {
+        const { answer, submitted } = await fetchUserAnswer(cid, currentCno, questionNumber);
+        if (submitted) {
+          setQuestionAnswer(answer);
+          setAnswerSubmitted(prev => ({ ...prev, [questionNumber]: true }));
+        }
+      } catch (error) {
+        console.error("Error fetching answer:", error);
       }
     }
   };
@@ -227,18 +179,10 @@ const ClassroomDetail = () => {
     }
 
     try {
-      if (currentUser) {
-        // Save to Realtime Database instead of Firestore
-        const answerRef = ref(dbRealtime, `classroom/${cid}/checkin/${currentCno}/answers/${questionNumber}/${currentUser.uid}`);
-        
-        await set(answerRef, {
-          text: questionAnswer,
-          timestamp: new Date(new Date().getTime() + 7 * 60 * 60 * 1000).toISOString()
-        });
-
+      const result = await submitAnswer(cid, currentCno, questionNumber, questionAnswer);
+      if (result.success) {
         setAnswerSubmitted(prev => ({ ...prev, [questionNumber]: true }));
         Alert.alert("Success", "Answer submitted successfully!");
-        // Don't clear the answer input to show submission
       }
     } catch (error) {
       console.error("Error submitting answer:", error);
@@ -254,70 +198,27 @@ const ClassroomDetail = () => {
     }
 
     try {
-      // ตรวจสอบรหัสการเช็คอินจาก Realtime Database
-      const checkInRef = ref(dbRealtime, `classroom/${cid}/checkin/${cnoInput}`);
-      const checkInSnapshot = await get(checkInRef);
+      const result = await submitCheckIn(cid, cnoInput, codeInput);
 
-      if (checkInSnapshot.exists() && checkInSnapshot.val().code === codeInput) {
-        if (currentUser) {
-          // ค้นหาข้อมูลรหัสนักศึกษาจากฐานข้อมูลคลาสเรียน
-          const studentsRef = ref(dbRealtime, `classroom/${cid}/students`);
-          const studentsSnapshot = await get(studentsRef);
+      // Set state for checked in
+      setCurrentCno(result.checkInId);
+      setCheckedIn(true);
+      setActiveCheckInId(result.checkInId);
+      
+      // Setup question listener with new check-in ID
+      setupQuestionListener(result.checkInId);
 
-          let studentId = "653380280-0"; // ค่าเริ่มต้นหากไม่พบข้อมูล
-          let foundStudent = false;
-
-          // ตรวจสอบว่ามีข้อมูลนักศึกษาในคลาสเรียนหรือไม่
-          if (studentsSnapshot.exists()) {
-            // วนลูปข้อมูลนักศึกษาทั้งหมดเพื่อหาข้อมูลที่ตรงกับ uid ของผู้ใช้ปัจจุบัน
-            studentsSnapshot.forEach((childSnapshot) => {
-              const studentData = childSnapshot.val();
-
-              // ถ้าพบ uid ที่ตรงกัน ให้ใช้ stdid จากข้อมูลนั้น
-              if (studentData.uid === currentUser.uid) {
-                studentId = studentData.stdid;
-                foundStudent = true;
-                return true; // หยุดการวนลูป
-              }
-              return false;
-            });
-          }
-
-          const currentDate = new Date(new Date().getTime() + 7 * 60 * 60 * 1000).toISOString();
-          const studentCheckInRef = ref(dbRealtime, `classroom/${cid}/checkin/${cnoInput}/students/${currentUser.uid}`);
-
-          // บันทึกข้อมูลเช็คอินพร้อมรหัสนักศึกษาที่ดึงมาได้
-          await set(studentCheckInRef, {
-            stdid: studentId,
-            name: currentUser.displayName || "Anonymous",
-            date: currentDate,
-          });
-
-          // Set state for checked in
-          setCurrentCno(cnoInput);
-          setCheckedIn(true);
-          setActiveCheckInId(cnoInput);
-          
-          // Re-setup question listener with new check-in ID
-          setupQuestionListener();
-
-          // แสดงข้อความแจ้งเตือนที่แตกต่างกันขึ้นอยู่กับว่าพบข้อมูลนักศึกษาหรือไม่
-          if (foundStudent) {
-            Alert.alert("Success", "You have checked in successfully!");
-          } else {
-            Alert.alert("Success", "You have checked in successfully with default student ID. Please update your profile in the classroom.");
-          }
-
-          setShowCheckInModal(false);
-        } else {
-          Alert.alert("Error", "You must be logged in to check in");
-        }
+      // แสดงข้อความแจ้งเตือน
+      if (result.foundStudent) {
+        Alert.alert("Success", "You have checked in successfully!");
       } else {
-        Alert.alert("Error", "Invalid CNO or code");
+        Alert.alert("Success", "You have checked in successfully with default student ID. Please update your profile in the classroom.");
       }
-    } catch (error) {
+
+      setShowCheckInModal(false);
+    } catch (error: any) {
       console.error("Error checking in:", error);
-      Alert.alert("Error", "Failed to check in. Please try again.");
+      Alert.alert("Error", error.message || "Failed to check in. Please try again.");
     }
   };
 
@@ -359,16 +260,26 @@ const ClassroomDetail = () => {
   // Navigate to next question
   const handleNextQuestion = () => {
     if (currentQuestionIndex < questions.length - 1) {
-      setCurrentQuestionIndex(prev => prev + 1);
-      fetchQuestionDetails(questions[currentQuestionIndex + 1].question_no);
+      const nextIndex = currentQuestionIndex + 1;
+      setCurrentQuestionIndex(nextIndex);
+      
+      const nextQuestion = questions[nextIndex];
+      if (nextQuestion) {
+        fetchQuestionDetails(nextQuestion.question_no);
+      }
     }
   };
 
   // Navigate to previous question
   const handlePrevQuestion = () => {
     if (currentQuestionIndex > 0) {
-      setCurrentQuestionIndex(prev => prev - 1);
-      fetchQuestionDetails(questions[currentQuestionIndex - 1].question_no);
+      const prevIndex = currentQuestionIndex - 1;
+      setCurrentQuestionIndex(prevIndex);
+      
+      const prevQuestion = questions[prevIndex];
+      if (prevQuestion) {
+        fetchQuestionDetails(prevQuestion.question_no);
+      }
     }
   };
 
