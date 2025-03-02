@@ -25,6 +25,7 @@ import TabNavigation from "./TabNavigation";
 import StudentList from "./StudentList";
 import ScoreList from "./ScoreList";
 import QRCodeModal from "./QRCodeModal";
+import UserGuideHint from "./UserGuideHint"; // เพิ่มคอมโพเนนต์คำแนะนำ
 
 // Import Utils
 import { generateRandomCode } from "./helpers";
@@ -274,6 +275,9 @@ const CheckIn = () => {
       await update(checkinRef, { status: 2 }); // เสร็จสิ้นการเช็คชื่อ
       
       alert("บันทึกคะแนนและปิดการเช็คชื่อเรียบร้อย");
+      
+      // นำผู้ใช้กลับไปยังหน้าจัดการห้องเรียน
+      navigate(`/manage-classroom/${classroomId}`);
     } catch (error) {
       console.error("Error saving scores:", error);
       alert("เกิดข้อผิดพลาดในการบันทึกคะแนน");
@@ -323,6 +327,9 @@ const CheckIn = () => {
           checkinDate={checkinDate}
           checkInCode={checkInCode}
         />
+
+        {/* แสดงคำแนะนำการใช้งาน */}
+        <UserGuideHint />
 
         {/* Main Action Buttons */}
         <ActionButtons 

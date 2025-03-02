@@ -16,16 +16,24 @@ const ScoreList = ({ scores, setScores, saveAllScores, classroomId, checkinId })
 
   return (
     <div className="bg-white rounded-2xl shadow-lg overflow-hidden">
-      <div className="p-6 border-b border-gray-100 flex justify-between items-center">
+      <div className="p-6 border-b border-gray-100 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <h2 className="text-2xl font-bold text-gray-800">
           คะแนนการเข้าเรียน
         </h2>
-        <button
-          onClick={saveAllScores}
-          className="px-6 py-3 bg-green-500 text-white rounded-xl font-medium shadow-lg shadow-green-500/20 hover:bg-green-600 transition duration-200"
-        >
-          บันทึกคะแนนและปิดการเช็คชื่อ
-        </button>
+        <div className="flex flex-col items-end">
+          <button
+            onClick={saveAllScores}
+            className="px-6 py-3 bg-green-500 text-white rounded-xl font-medium shadow-lg shadow-green-500/20 hover:bg-green-600 transition duration-200 flex items-center"
+          >
+            <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
+            </svg>
+            บันทึกคะแนนและปิดการเช็คชื่อ
+          </button>
+          <p className="text-xs text-gray-500 mt-1">
+            หมายเหตุ: การกดปุ่มนี้จะบันทึกคะแนนและปิดการเช็คชื่อ และนำคุณกลับสู่หน้าจัดการห้องเรียน
+          </p>
+        </div>
       </div>
       <div className="overflow-x-auto">
         <table className="w-full">
@@ -125,6 +133,21 @@ const ScoreList = ({ scores, setScores, saveAllScores, classroomId, checkinId })
           </tbody>
         </table>
       </div>
+      
+      {scores.length > 0 && (
+        <div className="p-4 bg-yellow-50 border-t border-yellow-100">
+          <div className="flex items-start">
+            <svg className="w-5 h-5 mt-0.5 text-yellow-500 mr-2 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+            </svg>
+            <div>
+              <p className="text-sm text-yellow-700">
+                <span className="font-medium">โปรดจำ:</span> อย่าลืมกดปุ่ม "บันทึกคะแนนและปิดการเช็คชื่อ" ด้านบนเพื่อบันทึกการเปลี่ยนแปลงและปิดการเช็คชื่อครั้งนี้
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
