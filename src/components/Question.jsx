@@ -115,42 +115,59 @@ const Question = () => {
         
         // ดึงข้อมูลคำตอบ เมื่อ activeQuestionNo มีค่า
         if (activeQuestionNo) {
+          // แก้ไขโครงสร้างการอ่านข้อมูลคำตอบ
           const answersRef = ref(db, `classroom/${classroomId}/checkin/${checkinId}/answers/${activeQuestionNo}`);
           onValue(answersRef, (snapshot) => {
             if (snapshot.exists()) {
               const data = snapshot.val();
+              const answersList = [];
               
-              // ดึงข้อมูลนักเรียนที่ตอบคำถาม
-              if (data.students) {
-                const answersList = Object.entries(data.students).map(([key, value]) => {
-                  // ดึงข้อมูลนักเรียนจากสตอร์ที่เราโหลดมาก่อนหน้า
-                  // ในกรณีนี้ key อาจเป็น UID หรือ stdId (เช่น "653380280-0")
-                  
-                  // หาข้อมูลนักเรียนจาก key โดยตรง หรือจาก stdId
-                  const studentInfo = Object.entries(students).find(([_, student]) => 
-                    student.stdid === key || _ === key
-                  );
-                  
-                  // ดึงชื่อนักเรียนจากข้อมูลที่พบ
-                  let studentName = value.name || ""; // ใช้ชื่อที่มีใน answer ก่อน (ถ้ามี)
-                  
-                  if (!studentName && studentInfo) {
-                    studentName = studentInfo[1].name; // ใช้ชื่อจากข้อมูลนักเรียน
-                  }
-                  
-                  return {
-                    id: key,
-                    text: value.text || "",
-                    time: value.time ? new Date(value.time).toLocaleString("th-TH") : new Date().toLocaleString("th-TH"),
-                    studentId: key,
-                    studentName: studentName || `นักเรียน (${key})`,
-                  };
-                });
+              // วนลูปเพื่อดึงข้อมูลคำตอบของแต่ละนักเรียน
+              // โครงสร้างใหม่ตาม JSON ที่ให้มา จะเป็น { studentId: { text, timestamp } }
+              for (const studentId in data) {
+                const answerData = data[studentId];
                 
-                setAnswers(answersList);
-              } else {
-                setAnswers([]);
+                // ข้ามถ้าไม่ใช่ object (เช่น text, timestamp)
+                if (typeof answerData !== 'object' || answerData === null) continue;
+                
+                // หาข้อมูลนักเรียนจาก students object
+                let studentName = "";
+                
+                // ค้นหาข้อมูลนักเรียนจาก key หรือ stdid
+                for (const uid in students) {
+                  if (uid === studentId || students[uid].stdid === studentId) {
+                    studentName = students[uid].name;
+                    break;
+                  }
+                }
+                
+                // ถ้าไม่พบชื่อจาก students ให้ใช้ชื่อจาก checkin/students ถ้ามี
+                if (!studentName) {
+                  const checkInStudentsRef = ref(db, `classroom/${classroomId}/checkin/${checkinId}/students`);
+                  get(checkInStudentsRef).then((studentSnapshot) => {
+                    if (studentSnapshot.exists()) {
+                      const checkInStudents = studentSnapshot.val();
+                      for (const uid in checkInStudents) {
+                        if (uid === studentId || checkInStudents[uid].stdid === studentId) {
+                          studentName = checkInStudents[uid].name;
+                          break;
+                        }
+                      }
+                    }
+                  });
+                }
+                
+                // สร้าง object เก็บคำตอบและข้อมูลนักเรียน
+                answersList.push({
+                  id: studentId,
+                  text: answerData.text || "",
+                  time: answerData.timestamp ? new Date(answerData.timestamp).toLocaleString("th-TH") : new Date().toLocaleString("th-TH"),
+                  studentId: studentId,
+                  studentName: studentName || `นักเรียน (${studentId})`,
+                });
               }
+              
+              setAnswers(answersList);
             } else {
               setAnswers([]);
             }
@@ -254,12 +271,9 @@ const Question = () => {
         question_show: true
       });
       
-      // สร้าง collection สำหรับเก็บคำตอบ
+      // เตรียมพื้นที่สำหรับเก็บคำตอบ - ปรับโครงสร้างตาม JSON ใหม่
       const answerRef = ref(db, `classroom/${classroomId}/checkin/${checkinId}/answers/${latestQuestion.questionNo}`);
-      await set(answerRef, {
-        text: latestQuestion.questionText,
-        students: {}
-      });
+      await set(answerRef, {});
       
       setIsQuestionActive(true);
       setActiveQuestionNo(latestQuestion.questionNo);
@@ -582,7 +596,7 @@ const Question = () => {
                   </div>
                 ))}
               </div>
-            ) : (
+            ) :  (
               <div className="text-center py-12">
                 <p className="text-gray-500 text-lg">
                   ยังไม่มีคำตอบจากนักเรียน

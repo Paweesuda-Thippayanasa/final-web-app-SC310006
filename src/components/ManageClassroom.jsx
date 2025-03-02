@@ -26,8 +26,8 @@ const ManageClassroom = () => {
   const [loading, setLoading] = useState(true);
   const [showQR, setShowQR] = useState(false);
   const [selectedDate, setSelectedDate] = useState(
-    new Date().toISOString().split("T")[0]
-  ); // Default to current date
+    new Date(new Date().getTime() + 7 * 60 * 60 * 1000).toISOString().split("T")[0]
+  ); // Default to current date in Bangkok time
   const qrCanvasRef = useRef(null);
   const navigate = useNavigate();
 
@@ -104,7 +104,7 @@ const ManageClassroom = () => {
           if (value.createdAt) {
             checkinDate = new Date(value.createdAt);
           } else {
-            checkinDate = new Date();
+            checkinDate = new Date(new Date().getTime() + 7 * 60 * 60 * 1000);
           }
           
           // นับจำนวนนักเรียนที่เข้าเรียน (มีสถานะ = 1)
@@ -196,7 +196,7 @@ const ManageClassroom = () => {
       // สร้างข้อมูลการเช็คชื่อใหม่
       await set(newCheckinRef, {
         createdAt: serverTimestamp(),
-        date: new Date().toLocaleString("th-TH"),
+        date: new Date(new Date().getTime() + 7 * 60 * 60 * 1000).toISOString(),
         status: 1, // กำลังเช็คชื่อ
         code: generateRandomCode(6), // สร้างรหัสสำหรับเช็คชื่อ
       });
@@ -219,7 +219,7 @@ const ManageClassroom = () => {
             status: 0, // เริ่มต้นที่ยังไม่มา
             score: 0,
             remark: "",
-            date: "",
+            date: new Date(new Date().getTime() + 7 * 60 * 60 * 1000).toISOString(),
           };
         });
 
