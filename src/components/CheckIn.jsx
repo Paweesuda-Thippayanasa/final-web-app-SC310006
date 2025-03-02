@@ -1,315 +1,371 @@
-import React, { useState } from "react";
+// CheckIn.jsx (Main Component)
+import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
+import {
+  getFirestore,
+  doc,
+  getDoc,
+} from "firebase/firestore";
+import {
+  getDatabase,
+  ref,
+  onValue,
+  off,
+  get,
+  set,
+  update,
+  serverTimestamp,
+} from "firebase/database";
+
+// Import Components
+import LoadingSpinner from "./LoadingSpinner";
+import CheckInHeader from "./CheckInHeader";
+import ActionButtons from "./ActionButtons";
+import TabNavigation from "./TabNavigation";
+import StudentList from "./StudentList";
+import ScoreList from "./ScoreList";
+import QRCodeModal from "./QRCodeModal";
+
+// Import Utils
+import { generateRandomCode } from "./helpers";
 
 const CheckIn = () => {
-	const { classroomId } = useParams();
-	const navigate = useNavigate();
+  const { classroomId, checkinId } = useParams();
+  const navigate = useNavigate();
+  const [loading, setLoading] = useState(true);
+  const [classroom, setClassroom] = useState(null);
+  const [currentCheckin, setCurrentCheckin] = useState(null);
+  const [checkinDate, setCheckinDate] = useState("");
+  const [students, setStudents] = useState([]);
+  const [scores, setScores] = useState([]);
+  const [showQRCode, setShowQRCode] = useState(false);
+  const [checkInCode, setCheckInCode] = useState("");
+  const [qrCodeData, setQrCodeData] = useState("");
+  const [activeTab, setActiveTab] = useState("studentList"); // "studentList" หรือ "scoreList"
 
-	// Mock Data Declarations
-	const mockClassroom = {
-		info: {
-			name: "Computer Programming",
-			code: "SC310001",
-			photo: "https://via.placeholder.com/200",
-			room: "SC5101",
-		},
-	};
+  // ดึงข้อมูลห้องเรียนจาก Firestore
+  useEffect(() => {
+    const fetchClassroomData = async () => {
+      try {
+        const firestoreDb = getFirestore();
+        const docRef = doc(firestoreDb, "classroom", classroomId);
+        const docSnap = await getDoc(docRef);
+        
+        if (docSnap.exists()) {
+          setClassroom(docSnap.data());
+        } else {
+          console.error("ไม่พบข้อมูลห้องเรียนใน Firestore");
+        }
+      } catch (error) {
+        console.error("Error fetching classroom data from Firestore:", error);
+      }
+    };
 
-	const mockCheckIns = [
-		{
-			id: "checkin1",
-			code: "ABC123",
-			date: "10/02/2025 13:00",
-			status: 1, // กำลังเช็คชื่อ
-		},
-		{
-			id: "checkin2",
-			code: "XYZ456",
-			date: "17/02/2025 13:00",
-			status: 2, // เสร็จสิ้นการเช็คชื่อ
-		},
-	];
+    fetchClassroomData();
+  }, [classroomId]);
 
-	const mockStudents = [
-		{
-			id: "student1",
-			stdid: "63010001",
-			name: "John Doe",
-			remark: "มาเรียน",
-			date: "10/02/2025 13:05",
-		},
-		{
-			id: "student2",
-			stdid: "63010002",
-			name: "Jane Smith",
-			remark: "มาสาย",
-			date: "10/02/2025 13:10",
-		},
-	];
+  // ดึงข้อมูลการเช็คชื่อและคะแนน
+  useEffect(() => {
+    const fetchCheckinData = async () => {
+      try {
+        const db = getDatabase();
+        const checkinRef = ref(db, `classroom/${classroomId}/checkin/${checkinId}`);
+        
+        onValue(checkinRef, (snapshot) => {
+          if (snapshot.exists()) {
+            const data = snapshot.val();
+            const formattedDate = data.createdAt 
+              ? new Date(data.createdAt).toLocaleString('th-TH', {
+                  year: 'numeric',
+                  month: 'long',
+                  day: 'numeric',
+                  hour: '2-digit',
+                  minute: '2-digit'
+                })
+              : "ไม่ระบุวันเวลา";
+            
+            setCheckinDate(formattedDate);
+            setCurrentCheckin({
+              id: checkinId,
+              code: data.code || "",
+              date: data.date || formattedDate,
+              status: data.status || 0,
+              question_show: data.question_show || false,
+              createdAt: data.createdAt
+            });
+            setCheckInCode(data.code || "");
+            
+            // ถ้ายังไม่มีรหัสเช็คชื่อให้สร้างอัตโนมัติ
+            if (!data.code) {
+              const generatedCode = generateRandomCode(6);
+              setCheckInCode(generatedCode);
+              update(checkinRef, { code: generatedCode });
+            }
+          }
+        });
 
-	const mockScores = [
-		{
-			id: "student1",
-			stdid: "63010001",
-			name: "John Doe",
-			remark: "มาเรียน",
-			date: "10/02/2025 13:05",
-			score: 10,
-			status: "1", // มาเรียน
-		},
-		{
-			id: "student2",
-			stdid: "63010002",
-			name: "Jane Smith",
-			remark: "มาสาย",
-			date: "10/02/2025 13:10",
-			score: 5,
-			status: "2", // มาสาย
-		},
-	];
+        // ดึงข้อมูลนักเรียนที่เช็คชื่อ
+        const studentsRef = ref(db, `classroom/${classroomId}/checkin/${checkinId}/students`);
+        
+        onValue(studentsRef, (snapshot) => {
+          if (snapshot.exists()) {
+            const data = snapshot.val();
+            const studentsList = Object.entries(data).map(([key, value]) => ({
+              id: key,
+              stdid: value.stdid || "",
+              name: value.name || "",
+              remark: value.remark || "",
+              date: value.date || "",
+            }));
+            setStudents(studentsList);
+          } else {
+            setStudents([]);
+          }
+        });
 
-	// State declarations
-	const [classroom, setClassroom] = useState(mockClassroom);
-	const [checkIns, setCheckIns] = useState(mockCheckIns);
-	const [students, setStudents] = useState(mockStudents);
-	const [scores, setScores] = useState(mockScores);
-	const [currentCheckIn, setCurrentCheckIn] = useState("checkin1");
-	const { checkinId } = useParams();
+        // ดึงข้อมูลคะแนน
+        const scoresRef = ref(db, `classroom/${classroomId}/checkin/${checkinId}/scores`);
+        
+        onValue(scoresRef, (snapshot) => {
+          if (snapshot.exists()) {
+            const data = snapshot.val();
+            const scoresList = Object.entries(data).map(([key, value]) => ({
+              id: key,
+              stdid: value.stdid || "",
+              name: value.name || "",
+              remark: value.remark || "",
+              date: value.date || "",
+              score: value.score || 0,
+              status: value.status !== undefined ? value.status : 0,
+            }));
+            setScores(scoresList);
+          } else {
+            setScores([]);
+          }
+          setLoading(false);
+        });
+        
+        // อัพเดทสถานะเป็น "กำลังเช็คชื่อ" โดยอัตโนมัติถ้าเข้ามาในหน้านี้
+        await update(checkinRef, { status: 1 });
+      } catch (error) {
+        console.error("Error fetching checkin data:", error);
+        setLoading(false);
+      }
+    };
 
-	const deleteStudent = (studentId) => {
-		setStudents(students.filter((student) => student.id !== studentId));
-	};
+    fetchCheckinData();
+    
+    // Clean up
+    return () => {
+      const db = getDatabase();
+      const checkinRef = ref(db, `classroom/${classroomId}/checkin/${checkinId}`);
+      const studentsRef = ref(db, `classroom/${classroomId}/checkin/${checkinId}/students`);
+      const scoresRef = ref(db, `classroom/${classroomId}/checkin/${checkinId}/scores`);
+      
+      off(checkinRef);
+      off(studentsRef);
+      off(scoresRef);
+    };
+  }, [classroomId, checkinId]);
 
-	const handleBack = () => {
-		navigate(`/manage-classroom/${classroomId}`);
-	};
+  // อัพเดทคะแนนอัตโนมัติเมื่อมีนักเรียนเช็คชื่อใหม่
+  useEffect(() => {
+    const updateScoresFromStudents = async () => {
+      if (students.length === 0) return;
+      
+      try {
+        const db = getDatabase();
+        const scoresRef = ref(db, `classroom/${classroomId}/checkin/${checkinId}/scores`);
+        const scoresSnapshot = await get(scoresRef);
+        let scoresData = {};
+        
+        if (scoresSnapshot.exists()) {
+          scoresData = scoresSnapshot.val();
+        }
+        
+        // ตรวจสอบว่ามีนักเรียนใหม่ที่ต้องอัพเดทคะแนนหรือไม่
+        let hasUpdates = false;
+        
+        students.forEach(student => {
+          if (!scoresData[student.id] || scoresData[student.id].status !== 1) {
+            hasUpdates = true;
+            scoresData[student.id] = {
+              ...(scoresData[student.id] || {}),
+              stdid: student.stdid,
+              name: student.name,
+              date: student.date,
+              remark: student.remark || "",
+              score: 10, // คะแนนเริ่มต้น
+              status: 1,  // มาเรียน
+              uid: student.id
+            };
+          }
+        });
+        
+        // อัพเดทข้อมูลถ้ามีการเปลี่ยนแปลง
+        if (hasUpdates) {
+          await set(scoresRef, scoresData);
+        }
+      } catch (error) {
+        console.error("Error updating scores automatically:", error);
+      }
+    };
+    
+    updateScoresFromStudents();
+  }, [students, classroomId, checkinId]);
 
-	const handleCreateQuestion = () => {
-		navigate(`/checkin/${classroomId}/question`);
-	};
+  // สร้าง QR Code สำหรับเช็คชื่อ
+  const generateQRCode = async () => {
+    if (!checkInCode) {
+      const code = generateRandomCode(6);
+      setCheckInCode(code);
+      
+      try {
+        const db = getDatabase();
+        const checkinRef = ref(db, `classroom/${classroomId}/checkin/${checkinId}`);
+        await update(checkinRef, { code: code });
+      } catch (error) {
+        console.error("Error setting check-in code:", error);
+      }
+    }
+    
+    try {
+      // สร้างข้อมูลสำหรับ QR Code
+      const qrData = JSON.stringify({
+        classroomId,
+        checkinId,
+        code: checkInCode
+      });
+      
+      const QRCode = (await import('qrcode')).default;
+      // สร้าง URL ของ QR Code
+      const qrCodeURL = await QRCode.toDataURL(qrData);
+      setQrCodeData(qrCodeURL);
+      setShowQRCode(true);
+    } catch (error) {
+      console.error("Error generating QR code:", error);
+      alert("เกิดข้อผิดพลาดในการสร้าง QR Code");
+    }
+  };
 
-	const startQuestion = () => {
-		// ตรวจสอบให้แน่ใจว่า checkinId มีค่า
-		if (!checkinId) {
-			console.error("CheckInId is missing");
-			return;
-		}
+  // บันทึกคะแนนทั้งหมด
+  const saveAllScores = async () => {
+    try {
+      const db = getDatabase();
+      const scoresRef = ref(db, `classroom/${classroomId}/checkin/${checkinId}/scores`);
+      const updatedScores = {};
+      
+      scores.forEach(score => {
+        updatedScores[score.id] = {
+          stdid: score.stdid,
+          name: score.name,
+          remark: score.remark,
+          date: score.date,
+          score: score.score,
+          status: parseInt(score.status),
+          uid: score.id
+        };
+      });
+      
+      await set(scoresRef, updatedScores);
+      
+      // ปิดการเช็คชื่อโดยอัตโนมัติ
+      const checkinRef = ref(db, `classroom/${classroomId}/checkin/${checkinId}`);
+      await update(checkinRef, { status: 2 }); // เสร็จสิ้นการเช็คชื่อ
+      
+      alert("บันทึกคะแนนและปิดการเช็คชื่อเรียบร้อย");
+    } catch (error) {
+      console.error("Error saving scores:", error);
+      alert("เกิดข้อผิดพลาดในการบันทึกคะแนน");
+    }
+  };
 
-		// ตอนนี้ checkinId จะมีค่าแล้ว
-		navigate(`/checkin/${classroomId}/${checkinId}/question`);
-	};
+  const handleBack = () => {
+    navigate(`/manage-classroom/${classroomId}`);
+  };
 
-	return (
-		<div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 py-8">
-			<div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-				{/* Back Button */}
-				<button
-					onClick={handleBack}
-					className="group flex items-center space-x-2 px-4 py-2 rounded-lg text-gray-600 hover:text-gray-900 hover:bg-white transition duration-200 mb-6"
-				>
-					<svg
-						className="w-5 h-5 transform group-hover:-translate-x-1 transition duration-200"
-						fill="none"
-						stroke="currentColor"
-						viewBox="0 0 24 24"
-					>
-						<path
-							strokeLinecap="round"
-							strokeLinejoin="round"
-							strokeWidth="2"
-							d="M10 19l-7-7m0 0l7-7m-7 7h18"
-						/>
-					</svg>
-					<span className="font-medium">กลับสู่หน้าจัดการห้องเรียน</span>
-				</button>
+  const navigateToQuestion = () => {
+    navigate(`/checkin/${classroomId}/${checkinId}/question`);
+  };
 
-				{/* Header Section */}
-				<div className="relative overflow-hidden bg-gradient-to-r from-blue-600 via-blue-500 to-indigo-600 rounded-2xl shadow-lg mb-8">
-					<div className="relative z-10 p-8">
-						<h1 className="text-4xl font-bold text-white mb-4">
-							{classroom.info.name}
-						</h1>
-						<div className="space-y-2 text-white/90">
-							<p className="text-lg">รหัสวิชา: {classroom.info.code}</p>
-							<p className="text-lg">ห้องเรียน: {classroom.info.room}</p>
-						</div>
-					</div>
-					<div className="absolute top-0 right-0 -mt-20 -mr-20">
-						<div className="w-40 h-40 bg-white/10 rounded-full blur-2xl"></div>
-					</div>
-				</div>
+  if (loading) {
+    return <LoadingSpinner />;
+  }
 
-				{/* Action Buttons */}
-				<div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-					<button className="px-6 py-3 bg-blue-500 text-white rounded-xl font-medium shadow-lg shadow-blue-500/20 hover:bg-blue-600 transition duration-200 transform hover:scale-105">
-						เปิดเช็คชื่อ
-					</button>
-					<button className="px-6 py-3 bg-red-500 text-white rounded-xl font-medium shadow-lg shadow-red-500/20 hover:bg-red-600 transition duration-200 transform hover:scale-105">
-						ปิดเช็คชื่อ
-					</button>
-					<button className="px-6 py-3 bg-green-500 text-white rounded-xl font-medium shadow-lg shadow-green-500/20 hover:bg-green-600 transition duration-200 transform hover:scale-105">
-						บันทึกการเช็คชื่อ
-					</button>
-					<button
-						onClick={startQuestion}
-						className="px-6 py-3 bg-purple-500 text-white rounded-xl font-medium shadow-lg shadow-purple-500/20 hover:bg-purple-600 transition duration-200 transform hover:scale-105"
-					>
-						สร้างคำถาม
-					</button>
-				</div>
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 py-8">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        {/* Back Button */}
+        <button
+          onClick={handleBack}
+          className="group flex items-center space-x-2 px-4 py-2 rounded-lg text-gray-600 hover:text-gray-900 hover:bg-white transition duration-200 mb-6"
+        >
+          <svg
+            className="w-5 h-5 transform group-hover:-translate-x-1 transition duration-200"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth="2"
+              d="M10 19l-7-7m0 0l7-7m-7 7h18"
+            />
+          </svg>
+          <span className="font-medium">กลับสู่หน้าจัดการห้องเรียน</span>
+        </button>
 
-				{/* Check-in List */}
-				<div className="bg-white rounded-2xl shadow-lg overflow-hidden mb-8">
-					<div className="p-6 border-b border-gray-100">
-						<h2 className="text-2xl font-bold text-gray-800">
-							รายชื่อผู้ที่เช็คชื่อ
-						</h2>
-					</div>
-					<div className="overflow-x-auto">
-						<table className="w-full">
-							<thead>
-								<tr className="bg-gray-50">
-									<th className="px-6 py-4 text-left text-sm font-semibold text-gray-600">
-										ลำดับ
-									</th>
-									<th className="px-6 py-4 text-left text-sm font-semibold text-gray-600">
-										รหัส
-									</th>
-									<th className="px-6 py-4 text-left text-sm font-semibold text-gray-600">
-										ชื่อ
-									</th>
-									<th className="px-6 py-4 text-left text-sm font-semibold text-gray-600">
-										หมายเหตุ
-									</th>
-									<th className="px-6 py-4 text-left text-sm font-semibold text-gray-600">
-										วันเวลา
-									</th>
-									<th className="px-6 py-4 text-left text-sm font-semibold text-gray-600">
-										จัดการ
-									</th>
-								</tr>
-							</thead>
-							<tbody className="divide-y divide-gray-100">
-								{students.map((student, index) => (
-									<tr
-										key={student.id}
-										className="hover:bg-gray-50/50 transition duration-150"
-									>
-										<td className="px-6 py-4 text-gray-600">{index + 1}</td>
-										<td className="px-6 py-4 font-medium text-gray-900">
-											{student.stdid}
-										</td>
-										<td className="px-6 py-4 text-gray-800">{student.name}</td>
-										<td className="px-6 py-4 text-gray-600">
-											{student.remark}
-										</td>
-										<td className="px-6 py-4 text-gray-600">{student.date}</td>
-										<td className="px-6 py-4">
-											<button
-												onClick={() => deleteStudent(student.id)}
-												className="text-red-500 hover:text-red-700 font-medium transition-colors"
-											>
-												ลบ
-											</button>
-										</td>
-									</tr>
-								))}
-							</tbody>
-						</table>
-					</div>
-				</div>
+        {/* Header Section */}
+        <CheckInHeader 
+          classroom={classroom} 
+          currentCheckin={currentCheckin}
+          checkinDate={checkinDate}
+          checkInCode={checkInCode}
+        />
 
-				{/* Scores Section */}
-				<div className="bg-white rounded-2xl shadow-lg overflow-hidden">
-					<div className="p-6 border-b border-gray-100">
-						<h2 className="text-2xl font-bold text-gray-800">
-							คะแนนการเข้าเรียน
-						</h2>
-					</div>
-					<div className="overflow-x-auto">
-						<table className="w-full">
-							<thead>
-								<tr className="bg-gray-50">
-									<th className="px-6 py-4 text-left text-sm font-semibold text-gray-600">
-										ลำดับ
-									</th>
-									<th className="px-6 py-4 text-left text-sm font-semibold text-gray-600">
-										รหัส
-									</th>
-									<th className="px-6 py-4 text-left text-sm font-semibold text-gray-600">
-										ชื่อ
-									</th>
-									<th className="px-6 py-4 text-left text-sm font-semibold text-gray-600">
-										หมายเหตุ
-									</th>
-									<th className="px-6 py-4 text-left text-sm font-semibold text-gray-600">
-										วันเวลา
-									</th>
-									<th className="px-6 py-4 text-left text-sm font-semibold text-gray-600">
-										คะแนน
-									</th>
-									<th className="px-6 py-4 text-left text-sm font-semibold text-gray-600">
-										สถานะ
-									</th>
-								</tr>
-							</thead>
-							<tbody className="divide-y divide-gray-100">
-								{scores.map((score, index) => (
-									<tr
-										key={score.id}
-										className="hover:bg-gray-50/50 transition duration-150"
-									>
-										<td className="px-6 py-4 text-gray-600">{index + 1}</td>
-										<td className="px-6 py-4 font-medium text-gray-900">
-											{score.stdid}
-										</td>
-										<td className="px-6 py-4 text-gray-800">{score.name}</td>
-										<td className="px-6 py-4 text-gray-600">{score.remark}</td>
-										<td className="px-6 py-4 text-gray-600">{score.date}</td>
-										<td className="px-6 py-4">
-											<input
-												type="text"
-												value={score.score}
-												onChange={(e) => {
-													const newScores = [...scores];
-													newScores[index].score = e.target.value;
-													setScores(newScores);
-												}}
-												className="w-16 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-											/>
-										</td>
-										<td className="px-6 py-4">
-											<select
-												value={score.status}
-												onChange={(e) => {
-													const newScores = [...scores];
-													newScores[index].status = e.target.value;
-													setScores(newScores);
-												}}
-												className="px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-											>
-												<option value="0">ไม่มา</option>
-												<option value="1">มาเรียน</option>
-												<option value="2">มาสาย</option>
-											</select>
-										</td>
-									</tr>
-								))}
-							</tbody>
-						</table>
-					</div>
-					<div className="p-6 border-t border-gray-100">
-						<button
-							onClick={() => alert("บันทึกคะแนนเรียบร้อย")}
-							className="px-6 py-3 bg-green-500 text-white rounded-xl font-medium shadow-lg shadow-green-500/20 hover:bg-green-600 transition duration-200 transform hover:scale-105"
-						>
-							บันทึกคะแนน
-						</button>
-					</div>
-				</div>
-			</div>
-		</div>
-	);
+        {/* Main Action Buttons */}
+        <ActionButtons 
+          generateQRCode={generateQRCode} 
+          navigateToQuestion={navigateToQuestion} 
+        />
+
+        {/* Tab Navigation */}
+        <TabNavigation 
+          activeTab={activeTab} 
+          setActiveTab={setActiveTab} 
+          studentCount={students.length}
+          scoreCount={scores.length}
+        />
+
+        {/* Conditional Content Based on Active Tab */}
+        {activeTab === "studentList" ? (
+          <StudentList 
+            students={students} 
+            classroomId={classroomId}
+            checkinId={checkinId}
+          />
+        ) : (
+          <ScoreList 
+            scores={scores} 
+            setScores={setScores}
+            saveAllScores={saveAllScores}
+            classroomId={classroomId}
+            checkinId={checkinId}
+          />
+        )}
+      </div>
+
+      {/* QR Code Modal */}
+      {showQRCode && (
+        <QRCodeModal 
+          checkInCode={checkInCode}
+          qrCodeData={qrCodeData}
+          onClose={() => setShowQRCode(false)}
+        />
+      )}
+    </div>
+  );
 };
 
 export default CheckIn;
